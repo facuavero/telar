@@ -7,16 +7,18 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="telar.css?v=2">
+<script>(function(){try{var t=localStorage.getItem('telar-tema');if(t!=='dark'&&t!=='light')t=matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';document.documentElement.setAttribute('data-theme',t)}catch(e){}})();</script>
+<link rel="stylesheet" href="telar.css?v=3">
 <script src="i18n-dict.js"></script>
 <script src="i18n.js"></script>
+<script src="tema.js"></script>
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='6' fill='%231B1915'/%3E%3Cg fill='none' stroke-width='2.4' stroke-linecap='butt'%3E%3Cpath d='M5 8h14' stroke='%233447C4'/%3E%3Cpath d='M5 12h14' stroke='%23C4402A'/%3E%3Cpath d='M5 16h14' stroke='%23C98F12'/%3E%3Cpath d='M9 5v5.6M9 13.4v5.6' stroke='%23F5F2EB'/%3E%3Cpath d='M15 5v1.6M15 9.4v5.2M15 17.4v1.6' stroke='%23F5F2EB'/%3E%3C/g%3E%3C/svg%3E">
 <style>
   body{font-size:15px}
   .plans{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:44px;align-items:stretch}
   .plan{padding:30px 26px;background:var(--surface);border:1px solid var(--line);border-radius:20px;display:flex;flex-direction:column}
-  .plan.on{background:var(--ink);color:#F1ECE1;border-color:var(--ink);box-shadow:var(--shadow-3);transform:translateY(-6px)}
-  .plan.on .muted,.plan.on .plan-desc{color:#A9A294}
+  .plan.on{background:var(--ink);color:var(--on-ink);border-color:var(--ink);box-shadow:var(--shadow-3);transform:translateY(-6px)}
+  .plan.on .muted,.plan.on .plan-desc{color:var(--on-ink-muted)}
   .plan h3{margin:0 0 2px;font-size:19px;font-weight:600;letter-spacing:-.01em}
   .plan .plan-desc{margin:0;font-size:13px;color:var(--muted)}
   .plan .price{display:flex;align-items:baseline;gap:4px;margin-top:16px}
@@ -25,7 +27,9 @@
   .plan ul{list-style:none;margin:24px 0 0;padding:0;display:flex;flex-direction:column;gap:11px;flex:1}
   .plan li{display:flex;gap:9px;align-items:flex-start;font-size:13.5px;line-height:1.4}
   .plan li svg{width:15px;height:15px;flex:none;margin-top:2px;color:var(--ok);fill:none;stroke:currentColor;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
-  .plan.on li svg{color:#7FC79C}
+  .plan.on li svg{color:var(--ok-on-ink)}
+  .plan.on .btn-ink{background:var(--on-ink);color:var(--ink)}
+  .plan.on .btn-ink:hover{background:var(--surface)}
   .plan .btn{margin-top:24px}
   .faq{max-width:720px;margin:96px auto 0}
   .faq details{border-bottom:1px solid var(--line)}
@@ -80,6 +84,10 @@
       <a class="nav-precios" aria-current="page" href="precios.html">Precios<span class="nav-ic"><svg class="i"><use href="#i-tag"/></svg></span></a>
     </div>
     <div class="right">
+      <button class="theme-btn" type="button" aria-pressed="false" aria-label="Cambiar a tema oscuro" title="Cambiar a tema oscuro">
+        <svg class="sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4.2"/><g class="rays"><path d="M12 2.6v2.2M12 19.2v2.2M2.6 12h2.2M19.2 12h2.2M5.4 5.4l1.6 1.6M17 17l1.6 1.6M18.6 5.4L17 7M7 17l-1.6 1.6"/></g></svg>
+        <svg class="moon" viewBox="0 0 24 24"><path d="M20.5 14.6A8.6 8.6 0 0 1 9.4 3.5a8.6 8.6 0 1 0 11.1 11.1z"/></svg>
+      </button>
       <div class="lang">
         <button class="lang-btn" type="button" aria-haspopup="true" aria-expanded="false">
           <svg class="globe"><use href="#i-globe"/></svg><span class="label">ES</span><svg class="chev"><use href="#i-chev"/></svg>

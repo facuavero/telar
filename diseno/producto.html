@@ -7,9 +7,11 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="telar.css?v=2">
+<script>(function(){try{var t=localStorage.getItem('telar-tema');if(t!=='dark'&&t!=='light')t=matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';document.documentElement.setAttribute('data-theme',t)}catch(e){}})();</script>
+<link rel="stylesheet" href="telar.css?v=3">
 <script src="i18n-dict.js"></script>
 <script src="i18n.js"></script>
+<script src="tema.js"></script>
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='6' fill='%231B1915'/%3E%3Cg fill='none' stroke-width='2.4' stroke-linecap='butt'%3E%3Cpath d='M5 8h14' stroke='%233447C4'/%3E%3Cpath d='M5 12h14' stroke='%23C4402A'/%3E%3Cpath d='M5 16h14' stroke='%23C98F12'/%3E%3Cpath d='M9 5v5.6M9 13.4v5.6' stroke='%23F5F2EB'/%3E%3Cpath d='M15 5v1.6M15 9.4v5.2M15 17.4v1.6' stroke='%23F5F2EB'/%3E%3C/g%3E%3C/svg%3E">
 <style>
   body{font-size:15px}
@@ -36,34 +38,34 @@
   .missing span{color:var(--muted);font-size:14px}
   @media (max-width:980px){ .igrid{grid-template-columns:1fr 1fr} }
   @media (max-width:600px){ .igrid{grid-template-columns:1fr} }
-  .dark-sec{margin:0 16px;background:var(--ink);color:#E9E3D6;border-radius:32px;padding:88px 0;position:relative;overflow:hidden}
-  .dark-sec::before{content:"";position:absolute;inset:0;background-image:linear-gradient(90deg,rgba(255,255,255,.045) 1px,transparent 1px);background-size:28px 100%;-webkit-mask-image:linear-gradient(180deg,#000,transparent 85%);mask-image:linear-gradient(180deg,#000,transparent 85%)}
+  .dark-sec{margin:0 16px;background:var(--inverse-bg);color:var(--inverse-ink);border-radius:32px;padding:88px 0;position:relative;overflow:hidden}
+  .dark-sec::before{content:"";position:absolute;inset:0;background-image:linear-gradient(90deg,var(--inverse-line) 1px,transparent 1px);background-size:28px 100%;-webkit-mask-image:linear-gradient(180deg,#000,transparent 85%);mask-image:linear-gradient(180deg,#000,transparent 85%)}
   .dark-sec .wrap{position:relative;display:grid;grid-template-columns:1fr 1fr;gap:64px;align-items:center}
-  .dark-sec .eyebrow{color:#8E877A}
+  .dark-sec .eyebrow{color:var(--inverse-muted)}
   .feats{margin-top:36px;display:flex;flex-direction:column;gap:22px}
   .feat{display:flex;gap:14px}
-  .feat .ic{width:22px;height:22px;display:grid;place-items:center;flex:none;color:#E9E3D6;margin-top:1px}
-  .feat b{display:block;font-weight:560;font-size:15.5px;color:#F5F0E6}
-  .feat p{margin:3px 0 0;font-size:14px;color:#A9A294;line-height:1.5}
-  .dmock{background:#24211C;border:1px solid #37332C;border-radius:18px;overflow:hidden;box-shadow:0 40px 90px -30px rgba(0,0,0,.6)}
-  .dmock .mock-head{display:flex;align-items:center;gap:12px;padding:16px 18px;border-bottom:1px solid #37332C}
+  .feat .ic{width:22px;height:22px;display:grid;place-items:center;flex:none;color:var(--inverse-ink);margin-top:1px}
+  .feat b{display:block;font-weight:560;font-size:15.5px;color:var(--inverse-title)}
+  .feat p{margin:3px 0 0;font-size:14px;color:var(--inverse-muted-2);line-height:1.5}
+  .dmock{background:var(--inverse-surface);border:1px solid var(--inverse-line-2);border-radius:18px;overflow:hidden;box-shadow:0 40px 90px -30px rgba(0,0,0,.6)}
+  .dmock .mock-head{display:flex;align-items:center;gap:12px;padding:16px 18px;border-bottom:1px solid var(--inverse-line-2)}
   .dmock .mock-head b{font-size:15px;font-weight:600;display:block}
-  .dmock .mock-head small{color:#8E877A;font-size:12.5px}
+  .dmock .mock-head small{color:var(--inverse-muted);font-size:12.5px}
   .dmock .mock-head .badge.ok{background:rgba(127,199,156,.14);color:#7FC79C;border:1px solid rgba(127,199,156,.28)}
   .dmock .mock-body{padding:16px 18px;display:flex;flex-direction:column;gap:2px}
-  .dmock .perm{display:flex;align-items:center;gap:14px;padding:10px 0;border-bottom:1px solid #37332C}
+  .dmock .perm{display:flex;align-items:center;gap:14px;padding:10px 0;border-bottom:1px solid var(--inverse-line-2)}
   .dmock .perm:last-of-type{border-bottom:0}
   .dmock .perm div{flex:1}
   .dmock .perm b{display:block;font-weight:560;font-size:14px}
-  .dmock .perm span{font-size:12.5px;color:#8E877A}
-  .dmock .toggle{background:#4A453C}
+  .dmock .perm span{font-size:12.5px;color:var(--inverse-muted)}
+  .dmock .toggle{background:var(--inverse-line-3)}
   .dmock .toggle.on{background:var(--ok)}
   .chips-row{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
-  .dchip{font:500 11px/1.45 var(--font-mono);letter-spacing:-.01em;padding:2px 7px;border-radius:5px;background:#302C25;color:#D9D2C4}
-  .log{border-top:1px solid #37332C;padding:14px 18px;font:12px/1.9 var(--font-mono);color:#8E877A}
+  .dchip{font:500 11px/1.45 var(--font-mono);letter-spacing:-.01em;padding:2px 7px;border-radius:5px;background:var(--inverse-surface-2);color:var(--inverse-ink)}
+  .log{border-top:1px solid var(--inverse-line-2);padding:14px 18px;font:12px/1.9 var(--font-mono);color:var(--inverse-muted)}
   .log .okc{color:#7FC79C}
   .log .wc{color:#E3B454}
-  .log b{color:#E9E3D6;font-weight:500}
+  .log b{color:var(--inverse-ink);font-weight:500}
   .principles{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-top:44px}
   .pcard{padding:24px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg)}
   .pcard .ic{width:26px;height:26px;display:grid;place-items:center;margin-bottom:14px}
@@ -136,6 +138,10 @@
       <a class="nav-precios" href="precios.html">Precios<span class="nav-ic"><svg class="i"><use href="#i-tag"/></svg></span></a>
     </div>
     <div class="right">
+      <button class="theme-btn" type="button" aria-pressed="false" aria-label="Cambiar a tema oscuro" title="Cambiar a tema oscuro">
+        <svg class="sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4.2"/><g class="rays"><path d="M12 2.6v2.2M12 19.2v2.2M2.6 12h2.2M19.2 12h2.2M5.4 5.4l1.6 1.6M17 17l1.6 1.6M18.6 5.4L17 7M7 17l-1.6 1.6"/></g></svg>
+        <svg class="moon" viewBox="0 0 24 24"><path d="M20.5 14.6A8.6 8.6 0 0 1 9.4 3.5a8.6 8.6 0 1 0 11.1 11.1z"/></svg>
+      </button>
       <div class="lang">
         <button class="lang-btn" type="button" aria-haspopup="true" aria-expanded="false">
           <svg class="globe"><use href="#i-globe"/></svg><span class="label">ES</span><svg class="chev"><use href="#i-chev"/></svg>
@@ -251,7 +257,7 @@
     <div class="wrap">
       <div>
         <span class="eyebrow">En la práctica</span>
-        <h2 class="title" style="color:#F5F0E6;font:400 clamp(32px,4vw,44px)/1.08 var(--font-serif);letter-spacing:-.02em;margin:10px 0 0">Así se ve un permiso, paso a paso.</h2>
+        <h2 class="title" style="color:var(--inverse-title);font:400 clamp(32px,4vw,44px)/1.08 var(--font-serif);letter-spacing:-.02em;margin:10px 0 0">Así se ve un permiso, paso a paso.</h2>
         <div class="feats">
           <div class="feat"><span class="ic"><svg class="i"><use href="#i-lock"/></svg></span><div><b>Elegís el alcance</b><p>Por canal, carpeta o etiqueta. Nunca acceso total por defecto.</p></div></div>
           <div class="feat"><span class="ic"><svg class="i"><use href="#i-usercheck"/></svg></span><div><b>Aprobás lo sensible</b><p>Publicar, enviar o editar pueden requerir tu confirmación previa.</p></div></div>
