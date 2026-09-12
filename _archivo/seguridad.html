@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Seguridad · Telar</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="telar.css">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='6' fill='%231B1915'/%3E%3Cg fill='none' stroke-width='2.4' stroke-linecap='butt'%3E%3Cpath d='M5 8h14' stroke='%233447C4'/%3E%3Cpath d='M5 12h14' stroke='%23C4402A'/%3E%3Cpath d='M5 16h14' stroke='%23C98F12'/%3E%3Cpath d='M9 5v5.6M9 13.4v5.6' stroke='%23F5F2EB'/%3E%3Cpath d='M15 5v1.6M15 9.4v5.2M15 17.4v1.6' stroke='%23F5F2EB'/%3E%3C/g%3E%3C/svg%3E">
+<style>
+  body{font-size:15px}
+  .dark-sec{margin:0 16px;background:var(--ink);color:#E9E3D6;border-radius:32px;padding:88px 0;position:relative;overflow:hidden}
+  .dark-sec::before{content:"";position:absolute;inset:0;background-image:linear-gradient(90deg,rgba(255,255,255,.045) 1px,transparent 1px);background-size:28px 100%;-webkit-mask-image:linear-gradient(180deg,#000,transparent 85%);mask-image:linear-gradient(180deg,#000,transparent 85%)}
+  .dark-sec .wrap{position:relative;display:grid;grid-template-columns:1fr 1fr;gap:64px;align-items:center}
+  .dark-sec .eyebrow{color:#8E877A}
+  .feats{margin-top:36px;display:flex;flex-direction:column;gap:22px}
+  .feat{display:flex;gap:14px}
+  .feat .ic{width:34px;height:34px;border-radius:10px;border:1px solid #3A362F;display:grid;place-items:center;flex:none;color:#E9E3D6}
+  .feat b{display:block;font-weight:560;font-size:15.5px;color:#F5F0E6}
+  .feat p{margin:3px 0 0;font-size:14px;color:#A9A294;line-height:1.5}
+  .dmock{background:#24211C;border:1px solid #37332C;border-radius:18px;overflow:hidden;box-shadow:0 40px 90px -30px rgba(0,0,0,.6)}
+  .dmock .mock-head{display:flex;align-items:center;gap:12px;padding:16px 18px;border-bottom:1px solid #37332C}
+  .dmock .mock-head b{font-size:15px;font-weight:600;display:block}
+  .dmock .mock-head small{color:#8E877A;font-size:12.5px}
+  .dmock .mock-head .badge.ok{background:rgba(127,199,156,.14);color:#7FC79C;border:1px solid rgba(127,199,156,.28)}
+  .dmock .mock-body{padding:16px 18px;display:flex;flex-direction:column;gap:2px}
+  .dmock .perm{display:flex;align-items:center;gap:14px;padding:10px 0;border-bottom:1px solid #37332C}
+  .dmock .perm:last-of-type{border-bottom:0}
+  .dmock .perm div{flex:1}
+  .dmock .perm b{display:block;font-weight:560;font-size:14px}
+  .dmock .perm span{font-size:12.5px;color:#8E877A}
+  .dmock .toggle{background:#4A453C}
+  .dmock .toggle.on{background:var(--ok)}
+  .chips-row{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+  .dchip{font:500 11px/1.45 var(--font-mono);letter-spacing:-.01em;padding:2px 7px;border-radius:5px;background:#302C25;color:#D9D2C4}
+  .log{border-top:1px solid #37332C;padding:14px 18px;font:12px/1.9 var(--font-mono);color:#8E877A}
+  .log .okc{color:#7FC79C}
+  .log .wc{color:#E3B454}
+  .log b{color:#E9E3D6;font-weight:500}
+  .principles{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-top:44px}
+  .pcard{padding:24px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg)}
+  .pcard .ic{width:34px;height:34px;border-radius:10px;border:1px solid var(--line-2);display:grid;place-items:center;margin-bottom:14px}
+  .pcard h4{margin:0 0 6px;font-size:16px;font-weight:560}
+  .pcard p{margin:0;font-size:13.5px;color:var(--muted);line-height:1.5}
+  @media (max-width:980px){ .dark-sec .wrap{grid-template-columns:1fr} .principles{grid-template-columns:1fr 1fr} }
+  @media (max-width:600px){ .principles{grid-template-columns:1fr} }
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+<symbol id="l-slack" viewBox="0 0 256 256"><g><path d="M53.8412698,161.320635 C53.8412698,176.152381 41.8539683,188.139683 27.0222222,188.139683 C12.1904762,188.139683 0.203174603,176.152381 0.203174603,161.320635 C0.203174603,146.488889 12.1904762,134.501587 27.0222222,134.501587 L53.8412698,134.501587 L53.8412698,161.320635 Z M67.2507937,161.320635 C67.2507937,146.488889 79.2380952,134.501587 94.0698413,134.501587 C108.901587,134.501587 120.888889,146.488889 120.888889,161.320635 L120.888889,228.368254 C120.888889,243.2 108.901587,255.187302 94.0698413,255.187302 C79.2380952,255.187302 67.2507937,243.2 67.2507937,228.368254 L67.2507937,161.320635 Z" fill="#E01E5A"></path><path d="M94.0698413,53.6380952 C79.2380952,53.6380952 67.2507937,41.6507937 67.2507937,26.8190476 C67.2507937,11.9873016 79.2380952,-7.10542736e-15 94.0698413,-7.10542736e-15 C108.901587,-7.10542736e-15 120.888889,11.9873016 120.888889,26.8190476 L120.888889,53.6380952 L94.0698413,53.6380952 Z M94.0698413,67.2507937 C108.901587,67.2507937 120.888889,79.2380952 120.888889,94.0698413 C120.888889,108.901587 108.901587,120.888889 94.0698413,120.888889 L26.8190476,120.888889 C11.9873016,120.888889 0,108.901587 0,94.0698413 C0,79.2380952 11.9873016,67.2507937 26.8190476,67.2507937 L94.0698413,67.2507937 Z" fill="#36C5F0"></path><path d="M201.549206,94.0698413 C201.549206,79.2380952 213.536508,67.2507937 228.368254,67.2507937 C243.2,67.2507937 255.187302,79.2380952 255.187302,94.0698413 C255.187302,108.901587 243.2,120.888889 228.368254,120.888889 L201.549206,120.888889 L201.549206,94.0698413 Z M188.139683,94.0698413 C188.139683,108.901587 176.152381,120.888889 161.320635,120.888889 C146.488889,120.888889 134.501587,108.901587 134.501587,94.0698413 L134.501587,26.8190476 C134.501587,11.9873016 146.488889,-1.42108547e-14 161.320635,-1.42108547e-14 C176.152381,-1.42108547e-14 188.139683,11.9873016 188.139683,26.8190476 L188.139683,94.0698413 Z" fill="#2EB67D"></path><path d="M161.320635,201.549206 C176.152381,201.549206 188.139683,213.536508 188.139683,228.368254 C188.139683,243.2 176.152381,255.187302 161.320635,255.187302 C146.488889,255.187302 134.501587,243.2 134.501587,228.368254 L134.501587,201.549206 L161.320635,201.549206 Z M161.320635,188.139683 C146.488889,188.139683 134.501587,176.152381 134.501587,161.320635 C134.501587,146.488889 146.488889,134.501587 161.320635,134.501587 L228.571429,134.501587 C243.403175,134.501587 255.390476,146.488889 255.390476,161.320635 C255.390476,176.152381 243.403175,188.139683 228.571429,188.139683 L161.320635,188.139683 Z" fill="#ECB22E"></path></g></symbol>
+<symbol id="p-spark" viewBox="0 0 256 256"><g fill="currentColor"><path d="M194.82,151.43l-55.09,20.3-20.3,55.09a7.92,7.92,0,0,1-14.86,0l-20.3-55.09-55.09-20.3a7.92,7.92,0,0,1,0-14.86l55.09-20.3,20.3-55.09a7.92,7.92,0,0,1,14.86,0l20.3,55.09,55.09,20.3A7.92,7.92,0,0,1,194.82,151.43Z" opacity="0.2"/><path d="M197.58,129.06,146,110l-19-51.62a15.92,15.92,0,0,0-29.88,0L78,110l-51.62,19a15.92,15.92,0,0,0,0,29.88L78,178l19,51.62a15.92,15.92,0,0,0,29.88,0L146,178l51.62-19a15.92,15.92,0,0,0,0-29.88ZM137,164.22a8,8,0,0,0-4.74,4.74L112,223.85,91.78,169A8,8,0,0,0,87,164.22L32.15,144,87,123.78A8,8,0,0,0,91.78,119L112,64.15,132.22,119a8,8,0,0,0,4.74,4.74L191.85,144ZM144,40a8,8,0,0,1,8-8h16V16a8,8,0,0,1,16,0V32h16a8,8,0,0,1,0,16H184V64a8,8,0,0,1-16,0V48H152A8,8,0,0,1,144,40ZM248,88a8,8,0,0,1-8,8h-8v8a8,8,0,0,1-16,0V96h-8a8,8,0,0,1,0-16h8V72a8,8,0,0,1,16,0v8h8A8,8,0,0,1,248,88Z"/></g></symbol>
+<symbol id="p-branch" viewBox="0 0 256 256"><g fill="currentColor"><path d="M224,64a24,24,0,1,1-24-24A24,24,0,0,1,224,64Z" opacity="0.2"/><path d="M232,64a32,32,0,1,0-40,31v17a8,8,0,0,1-8,8H96a23.84,23.84,0,0,0-8,1.38V95a32,32,0,1,0-16,0v66a32,32,0,1,0,16,0V144a8,8,0,0,1,8-8h88a24,24,0,0,0,24-24V95A32.06,32.06,0,0,0,232,64ZM64,64A16,16,0,1,1,80,80,16,16,0,0,1,64,64ZM96,192a16,16,0,1,1-16-16A16,16,0,0,1,96,192ZM200,80a16,16,0,1,1,16-16A16,16,0,0,1,200,80Z"/></g></symbol>
+<symbol id="p-checkc" viewBox="0 0 256 256"><g fill="currentColor"><path d="M224,128a96,96,0,1,1-96-96A96,96,0,0,1,224,128Z" opacity="0.2"/><path d="M173.66,98.34a8,8,0,0,1,0,11.32l-56,56a8,8,0,0,1-11.32,0l-24-24a8,8,0,0,1,11.32-11.32L112,148.69l50.34-50.35A8,8,0,0,1,173.66,98.34ZM232,128A104,104,0,1,1,128,24,104.11,104.11,0,0,1,232,128Zm-16,0a88,88,0,1,0-88,88A88.1,88.1,0,0,0,216,128Z"/></g></symbol>
+<symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h14M13 5l7 7-7 7"/></symbol>
+<symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
+<symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></symbol>
+<symbol id="i-usercheck" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="m16 11 2 2 4-4"/></symbol>
+<symbol id="i-lock" viewBox="0 0 24 24"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></symbol>
+<symbol id="i-shieldshield" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></symbol>
+<symbol id="i-tag" viewBox="0 0 24 24"><path d="M12.59 2H7a2 2 0 0 0-2 2v5.59a2 2 0 0 0 .59 1.41l9 9a2 2 0 0 0 2.82 0l5.59-5.59a2 2 0 0 0 0-2.82l-9-9A2 2 0 0 0 12.59 2Z"/><circle cx="7.5" cy="7.5" r="1.25" fill="currentColor" stroke="none"/></symbol>
+<symbol id="i-mark" viewBox="0 0 24 24">
+  <rect width="24" height="24" rx="6" fill="#1B1915" stroke="none"/>
+  <g fill="none" stroke-width="2.4" stroke-linecap="butt">
+    <path d="M5 8h14" stroke="#3447C4"/><path d="M5 12h14" stroke="#C4402A"/><path d="M5 16h14" stroke="#C98F12"/>
+    <path d="M9 5v5.6M9 13.4V19" stroke="#F5F2EB"/>
+    <path d="M15 5v1.6M15 9.4v5.2M15 17.4V19" stroke="#F5F2EB"/>
+  </g>
+</symbol>
+</svg>
+
+<nav class="top">
+  <div class="wrap">
+    <a class="logo" href="landing.html"><svg><use href="#i-mark"/></svg>Telar</a>
+    <div class="links">
+      <a class="nav-producto" href="producto.html">Producto<span class="nav-ic"><svg><use href="#p-spark"/></svg></span></a>
+      <a class="nav-integraciones" href="integraciones.html">Integraciones<span class="nav-ic"><svg><use href="#p-branch"/></svg></span></a>
+      <a class="nav-casos" href="casos-de-uso.html">Casos de uso<span class="nav-ic"><svg><use href="#p-checkc"/></svg></span></a>
+      <a class="nav-seguridad" href="seguridad.html">Seguridad<span class="nav-ic"><svg class="i"><use href="#i-shield"/></svg></span></a>
+      <a class="nav-precios" href="precios.html">Precios<span class="nav-ic"><svg class="i"><use href="#i-tag"/></svg></span></a>
+    </div>
+    <div class="right">
+      <a class="btn btn-ghost" href="#">Iniciar sesión</a>
+      <a class="btn btn-ink" href="#">Empezar gratis</a>
+    </div>
+  </div>
+</nav>
+
+<header class="subhero">
+  <div class="wrap">
+    <span class="eyebrow">Seguridad</span>
+    <h1>Vos decidís<span> qué puede tocar Telar.</span></h1>
+    <p>Cada conexión arranca en solo lectura, cada acción sensible espera tu aprobación y todo lo que pasa por Telar queda registrado y en tu workspace.</p>
+  </div>
+</header>
+
+<section class="s" style="padding-top:24px">
+  <div class="wrap">
+    <div class="principles">
+      <div class="pcard"><div class="ic" style="color:var(--anil)"><svg class="i"><use href="#i-lock"/></svg></div><h4>Permisos mínimos</h4><p>Cada conexión arranca en solo lectura. Habilitás acciones de a una y por canal, carpeta o etiqueta.</p></div>
+      <div class="pcard"><div class="ic" style="color:var(--ocre)"><svg class="i"><use href="#i-usercheck"/></svg></div><h4>Aprobás antes de enviar</h4><p>Los pasos que escriben, envían o editan pueden esperar tu OK antes de ejecutarse.</p></div>
+      <div class="pcard"><div class="ic" style="color:var(--ok)"><svg class="i"><use href="#i-shieldshield"/></svg></div><h4>Tus datos no entrenan modelos</h4><p>Lo que pasa por Telar queda en tu workspace. Todo queda registrado y desconectás cuando quieras.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="s">
+  <section class="dark-sec">
+    <div class="wrap">
+      <div>
+        <span class="eyebrow">En la práctica</span>
+        <h2 class="title" style="color:#F5F0E6;font:400 clamp(32px,4vw,44px)/1.08 var(--font-serif);letter-spacing:-.02em;margin:10px 0 0">Así se ve un permiso, paso a paso.</h2>
+        <div class="feats">
+          <div class="feat"><span class="ic"><svg class="i"><use href="#i-lock"/></svg></span><div><b>Elegís el alcance</b><p>Por canal, carpeta o etiqueta. Nunca acceso total por defecto.</p></div></div>
+          <div class="feat"><span class="ic"><svg class="i"><use href="#i-usercheck"/></svg></span><div><b>Aprobás lo sensible</b><p>Publicar, enviar o editar pueden requerir tu confirmación previa.</p></div></div>
+          <div class="feat"><span class="ic"><svg class="i"><use href="#i-shieldshield"/></svg></span><div><b>Queda todo registrado</b><p>Un log de cada acción, para auditar cuando quieras.</p></div></div>
+        </div>
+      </div>
+      <div class="dmock">
+        <div class="mock-head"><svg class="brand lg"><use href="#l-slack"/></svg><div><b>Slack · pampa-labs</b><small>Usada en 5 automatizaciones</small></div><span class="badge ok" style="margin-left:auto"><span class="dot"></span>Conectada</span></div>
+        <div class="mock-body">
+          <div class="perm"><div><b>Leer canales públicos</b><span>Solo los canales elegidos</span><div class="chips-row"><span class="dchip">#ventas</span><span class="dchip">#finanzas</span><span class="dchip">#soporte</span></div></div><button class="toggle on" aria-label="Leer canales"></button></div>
+          <div class="perm"><div><b>Leer canales privados</b><span>Desactivado</span></div><button class="toggle" aria-label="Leer privados"></button></div>
+          <div class="perm"><div><b>Publicar mensajes</b><span>Con tu aprobación previa</span></div><button class="toggle on" aria-label="Publicar"></button></div>
+        </div>
+        <div class="log">
+          <div>09:00:02 &nbsp;<b>leer #ventas</b> &nbsp;<span class="okc">✓ permitido</span></div>
+          <div>09:00:09 &nbsp;<b>resumir 214 mensajes</b> &nbsp;<span class="okc">✓ ok</span></div>
+          <div>09:00:11 &nbsp;<b>publicar en #ventas</b> &nbsp;<span class="wc">◷ esperando aprobación</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="fgrid">
+      <div><a class="logo" href="landing.html"><svg><use href="#i-mark"/></svg>Telar</a><p>Conecta tus herramientas de trabajo y automatiza tareas con solo pedirlo.</p></div>
+      <div><h5>Producto</h5><a href="producto.html">Cómo funciona</a><a href="casos-de-uso.html">Casos de uso</a><a href="#">Plantillas</a><a href="precios.html">Precios</a></div>
+      <div><h5>Integraciones</h5><a href="integraciones.html">Slack</a><a href="integraciones.html">Gmail</a><a href="integraciones.html">Google Workspace</a><a href="integraciones.html">Notion</a></div>
+      <div><h5>Recursos</h5><a href="#">Guías</a><a href="#">Changelog</a><a href="#">Estado</a><a href="#">API y webhooks</a></div>
+      <div><h5>Empresa</h5><a href="seguridad.html">Seguridad</a><a href="#">Privacidad</a><a href="#">Contacto</a></div>
+    </div>
+    <div class="fbottom"><span>© 2026 Telar</span><span>Hecho con hilos, no con código.</span></div>
+  </div>
+</footer>
+
+<script>
+  const topNav = document.querySelector('.top');
+  addEventListener('scroll', () => topNav.classList.toggle('scrolled', scrollY > 8), {passive:true});
+  document.addEventListener('click', e => {
+    const t = e.target.closest('.toggle'); if (t) t.classList.toggle('on');
+  });
+</script>
+</body>
+</html>

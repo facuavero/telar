@@ -1,0 +1,1166 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Telar · Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="telar.css">
+<style>
+  html,body{height:100%}
+  body{overflow:hidden}
+  a{color:inherit;text-decoration:none}
+  body[data-estado="datos"] [data-when="nuevo"]{display:none!important}
+  body[data-estado="nuevo"] [data-when="datos"]{display:none!important}
+
+  .shell{display:grid;grid-template-columns:252px 1fr;height:100vh}
+
+  /* ---------- Sidebar (ref: Canny, Customer.io, Zapier medidor, Buffer conexiones) ---------- */
+  .side{padding:12px 10px 12px 12px;display:flex;flex-direction:column;gap:2px;overflow:auto;min-height:0}
+  .ws{display:flex;align-items:center;gap:9px;padding:6px 8px;border-radius:9px;cursor:pointer;margin-bottom:8px}
+  .ws:hover{background:rgba(27,25,21,.05)}
+  .ws svg.mk{width:26px;height:26px}
+  .ws b{font-weight:600;font-size:14px;display:block;line-height:1.2}
+  .ws small{font-size:11.5px;color:var(--muted)}
+  .ws .i{margin-left:auto;color:var(--muted)}
+  .newbtn{justify-content:flex-start;margin-bottom:12px;height:36px}
+  .newbtn .kbd{margin-left:auto;background:#34312B;border-color:#46423A;color:#BDB6A8}
+  .nav a{display:flex;align-items:center;gap:10px;height:33px;padding:0 10px;border-radius:8px;color:var(--ink-2);font-size:13.5px;cursor:pointer;transition:background .12s}
+  .nav a:hover{background:rgba(27,25,21,.05)}
+  .nav a.on{background:var(--surface);color:var(--ink);box-shadow:0 0 0 1px var(--line),var(--shadow-1);font-weight:500}
+  .nav a .count{margin-left:auto;font:500 11px var(--font-mono);color:var(--muted)}
+  .nav a .badge{margin-left:auto;height:18px;padding:0 6px}
+  .grp{font:500 10.5px var(--font-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--faint);padding:18px 10px 6px}
+  .pin{display:flex;align-items:center;gap:9px;height:32px;padding:0 10px;border-radius:8px;font-size:13px;color:var(--ink-2);cursor:pointer}
+  .pin:hover{background:rgba(27,25,21,.05)}
+  .pin span.t{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .side-foot{margin-top:auto;display:flex;flex-direction:column;gap:8px;padding-top:16px}
+  .meter{padding:10px 11px;border-radius:11px;border:1px solid var(--line);background:var(--surface)}
+  .mrow{display:flex;justify-content:space-between;align-items:baseline;font-size:12px;color:var(--muted)}
+  .mrow b{color:var(--ink);font-weight:560}
+  .mbar{height:5px;border-radius:5px;background:var(--bg-2);margin-top:8px;overflow:hidden}
+  .mbar i{display:block;height:100%;border-radius:5px;background:var(--ink)}
+  .mbar i.hilo-bar{background:var(--hilo);background-size:48px 100%}
+  .meter small{display:block;font-size:11.5px;color:var(--faint);margin-top:6px}
+  .me{display:flex;align-items:center;gap:10px;padding:8px;border-radius:9px;cursor:pointer}
+  .me:hover{background:rgba(27,25,21,.05)}
+  .av{width:28px;height:28px;border-radius:50%;background:#D9CBB0;display:grid;place-items:center;font-weight:600;font-size:11.5px;color:var(--ink-2);flex:none}
+  .me b{font-size:13px;font-weight:560;display:block;line-height:1.2}
+  .me small{font-size:11.5px;color:var(--muted)}
+
+  /* ---------- Main ---------- */
+  .main{margin:8px 8px 8px 0;background:var(--surface-2);border:1px solid var(--line);border-radius:16px;overflow:hidden;display:flex;flex-direction:column;min-width:0;min-height:0}
+  .mhead{height:52px;display:flex;align-items:center;gap:10px;padding:0 12px 0 20px;border-bottom:1px solid var(--line);flex:none;background:var(--surface)}
+  .crumb{display:flex;align-items:center;gap:6px;font-size:13.5px;color:var(--muted);white-space:nowrap}
+  .crumb b{color:var(--ink);font-weight:560}
+  .crumb a:hover{color:var(--ink)}
+  .search{margin-left:auto;display:flex;align-items:center;gap:8px;height:32px;width:280px;padding:0 8px 0 10px;border-radius:9px;border:1px solid var(--line);background:var(--surface-2);color:var(--faint);font-size:13px;cursor:text}
+  .search .kbd{margin-left:auto}
+  .icon-btn{width:32px;height:32px;border-radius:8px;border:0;background:none;display:grid;place-items:center;color:var(--ink-2);cursor:pointer;position:relative}
+  .icon-btn:hover{background:rgba(27,25,21,.05)}
+  .icon-btn .pip{position:absolute;top:7px;right:8px;width:7px;height:7px;border-radius:50%;background:var(--carmin);box-shadow:0 0 0 2px var(--surface)}
+  .demo-state{display:flex;align-items:center;gap:2px;padding:3px;border-radius:99px;background:var(--bg);border:1px solid var(--line);font-size:11.5px;margin-right:4px}
+  .demo-state span{padding:0 6px 0 8px;color:var(--faint);font:500 10.5px var(--font-mono);letter-spacing:.06em;text-transform:uppercase}
+  .demo-state button{height:24px;padding:0 10px;border-radius:99px;border:0;background:none;cursor:pointer;color:var(--muted);font-weight:500;font-size:12px}
+  .demo-state button.on{background:var(--ink);color:#FBFAF6}
+
+  .view{display:none;flex:1;overflow:auto;min-height:0}
+  .view.on{display:block}
+  #v-editor.on{display:flex;flex-direction:column;overflow:hidden}
+  .page{max-width:1080px;margin:0 auto;padding:36px 32px 72px}
+  .page.narrow{max-width:940px}
+  .ph{display:flex;align-items:flex-end;gap:16px;margin-bottom:24px}
+  .ph h1{font:400 40px/1 var(--font-serif);letter-spacing:-.015em;margin:0}
+  .ph p{margin:8px 0 0;color:var(--muted);font-size:14px}
+  .ph .act{margin-left:auto;display:flex;gap:8px}
+
+  /* ---------- Inicio (ref: Dropbox Dash + Zapier + Devin) ---------- */
+  .hello{font:400 46px/1.04 var(--font-serif);letter-spacing:-.018em;text-align:center;margin:24px 0 26px}
+  .hello em{color:var(--muted)}
+  .connect-strip{display:flex;align-items:center;gap:10px;padding:8px 8px 8px 14px;margin:0 16px;background:var(--bg-2);border:1px solid var(--line-2);border-bottom:0;border-radius:14px 14px 0 0;font-size:13px;color:var(--ink-2)}
+  .connect-strip .stack{margin-left:auto}
+  .composer{position:relative;background:var(--surface);border:1.5px solid var(--line-2);border-radius:18px;box-shadow:var(--shadow-2);padding:16px 16px 10px;transition:border-color .15s}
+  .composer:focus-within{border-color:var(--ink-2)}
+  .composer.working{border-color:transparent;background:linear-gradient(var(--surface),var(--surface)) padding-box,var(--hilo) border-box;background-size:auto,48px 100%;animation:tejer2 1.4s linear infinite}
+  @keyframes tejer2{to{background-position:0 0,48px 0}}
+  .ctext{min-height:54px;font-size:16px;line-height:1.7;outline:none;word-wrap:break-word}
+  .ctext:empty::before{content:attr(data-placeholder);color:var(--faint);pointer-events:none}
+  .ctools{display:flex;align-items:center;gap:6px;margin-top:10px}
+  .tool{display:inline-flex;align-items:center;gap:6px;height:30px;padding:0 10px;border-radius:8px;border:1px solid var(--line);background:var(--surface);font-size:12.5px;font-weight:500;color:var(--ink-2);cursor:pointer}
+  .tool:hover{background:var(--surface-2);border-color:var(--line-2)}
+  .send{margin-left:auto;width:34px;height:34px;border-radius:50%;background:var(--ink);color:#fff;border:0;display:grid;place-items:center;cursor:pointer}
+  .send:hover{background:#000}
+  .working-line{display:none;align-items:center;gap:8px;justify-content:center;margin-top:12px;font-size:13px;color:var(--muted)}
+  .composer.working + .working-line{display:flex}
+  .spin{width:14px;height:14px;border-radius:50%;background:conic-gradient(var(--anil),var(--carmin),var(--ocre),var(--anil));-webkit-mask:radial-gradient(circle 5px,transparent 98%,#000);mask:radial-gradient(circle 5px,transparent 98%,#000);animation:girar 1.2s linear infinite}
+  @keyframes girar{to{transform:rotate(1turn)}}
+  .mentions{position:absolute;left:12px;top:calc(100% + 6px);width:380px;background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow-3);padding:6px;z-index:20}
+  .msearch{display:flex;gap:8px;align-items:center;padding:8px 10px 10px;border-bottom:1px solid var(--line);color:var(--muted);font-size:13px;margin-bottom:4px}
+  .mgrp{font:500 10.5px var(--font-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--faint);padding:8px 10px 4px}
+  .mitem{display:flex;gap:10px;align-items:center;padding:7px 10px;border-radius:9px;cursor:pointer}
+  .mitem:hover{background:var(--bg)}
+  .mitem b{font-weight:500;font-size:13.5px;display:block}
+  .mitem small{color:var(--muted);font-size:12px}
+  .intents{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:16px}
+  .intents .i{color:var(--muted)}
+
+  .setup-mini{display:flex;align-items:center;gap:14px;padding:12px 14px 12px 12px;border:1px solid var(--line);border-radius:14px;background:var(--surface);margin-top:32px}
+  .ring{--p:60;width:38px;height:38px;border-radius:50%;background:conic-gradient(var(--ink) calc(var(--p)*1%),var(--bg-2) 0);display:grid;place-items:center;flex:none}
+  .ring span{width:30px;height:30px;border-radius:50%;background:var(--surface);display:grid;place-items:center;font:500 11px var(--font-mono)}
+  .setup-mini b{font-weight:560;font-size:13.5px}
+  .setup-mini p{margin:1px 0 0;font-size:12.5px;color:var(--muted)}
+  .setup-mini .btn{margin-left:auto}
+
+  .kpis{display:grid;grid-template-columns:repeat(3,1fr);border:1px solid var(--line);border-radius:14px;background:var(--surface);margin-top:14px}
+  .kpi{padding:16px 18px;display:grid;grid-template-columns:1fr auto;gap:2px 12px;align-items:end}
+  .kpi + .kpi{border-left:1px solid var(--line)}
+  .kpi .lbl{font-size:12.5px;color:var(--muted);grid-column:1/-1;margin-bottom:6px}
+  .kpi .val{font:500 30px/1.05 var(--font-sans);letter-spacing:-.03em}
+  .kpi .val small{font-size:15px;color:var(--muted);letter-spacing:0}
+  .kpi .sub{font-size:12px;color:var(--muted);grid-column:1}
+  .kpi .sub .up{color:var(--ok);font-weight:500}
+  .kpi svg.spark{grid-row:2/4;grid-column:2}
+  .kpi a.more{font-size:12px;font-weight:500;color:var(--err);display:inline-flex;align-items:center;gap:4px}
+
+  .grid-2{display:grid;grid-template-columns:1.3fr 1fr;gap:14px;margin-top:14px;align-items:start}
+  .ch{display:flex;align-items:center;gap:8px;padding:13px 16px;border-bottom:1px solid var(--line)}
+  .ch h3{font-size:14px;font-weight:600;margin:0}
+  .ch .btn{margin-left:auto}
+  .arow{display:grid;grid-template-columns:auto 1fr auto auto;gap:12px;align-items:center;padding:11px 16px;border-bottom:1px solid var(--line);cursor:pointer;transition:background .12s}
+  .arow:last-child{border-bottom:0}
+  .arow:hover{background:var(--surface-2)}
+  .arow b{font-weight:560;font-size:13.5px;display:block}
+  .arow small{font-size:12px;color:var(--muted)}
+  .arow .runs{font:500 12px var(--font-mono);color:var(--muted);text-align:right}
+  .fitem{display:grid;grid-template-columns:auto 1fr;gap:11px;padding:11px 16px;border-bottom:1px solid var(--line);align-items:flex-start}
+  .fitem:last-child{border-bottom:0}
+  .sic{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;flex:none;margin-top:1px}
+  .sic .i{width:12px;height:12px;stroke-width:2.4}
+  .sic.ok{background:var(--ok-soft);color:var(--ok)}
+  .sic.wait{background:var(--ocre-soft);color:var(--warn)}
+  .sic.err{background:var(--err-soft);color:var(--err)}
+  .fitem p{margin:0;font-size:13.5px;line-height:1.45}
+  .fitem p b{font-weight:560}
+  .fitem .meta{display:flex;align-items:center;gap:8px;margin-top:4px;font-size:12px;color:var(--muted);flex-wrap:wrap}
+  .fitem .meta .btn{height:24px;font-size:12px;padding:0 9px}
+
+  /* Cuenta nueva: checklist (ref: HoneyBook duración por paso), empty (ref: Plain), recetas (ref: Zapier) */
+  .sec-title{display:flex;align-items:center;justify-content:space-between;margin:36px 0 12px}
+  .sec-title h3{font-size:14px;font-weight:600;margin:0}
+  .sec-title span{font-size:12.5px;color:var(--muted)}
+  .setup{overflow:hidden}
+  .setup .top{display:flex;align-items:center;gap:14px;padding:16px 18px;border-bottom:1px solid var(--line)}
+  .setup .top b{font-size:15px;font-weight:600}
+  .setup .top .pbar{flex:1;max-width:220px;margin-left:auto;height:6px;border-radius:6px;background:var(--bg-2);overflow:hidden}
+  .setup .top .pbar i{display:block;height:100%;width:0;background:var(--ok)}
+  .setup .top .mono{font-size:12px;color:var(--muted)}
+  .step{display:flex;align-items:center;gap:14px;padding:13px 18px;border-bottom:1px solid var(--line)}
+  .step:last-child{border-bottom:0}
+  .step .cc{width:22px;height:22px;border-radius:50%;border:1.5px solid var(--line-2);flex:none}
+  .step.next{background:var(--surface-2)}
+  .step.next .cc{border-color:var(--ink)}
+  .step b{font-weight:560;font-size:14px}
+  .step .dur{font:500 11px var(--font-mono);color:var(--muted);padding:2px 6px;border-radius:5px;background:var(--bg);margin-left:6px}
+  .step p{margin:2px 0 0;font-size:12.5px;color:var(--muted)}
+  .step .btn,.step > .i{margin-left:auto}
+  .empty{padding:30px 24px;text-align:center;border:1px dashed var(--line-2);border-radius:14px;background:var(--surface)}
+  .empty .eic{width:38px;height:38px;border-radius:11px;border:1px solid var(--line);display:grid;place-items:center;margin:0 auto 12px;background:var(--surface-2);color:var(--ink-2)}
+  .empty h4{margin:0;font-size:15px;font-weight:600}
+  .empty p{margin:6px auto 0;font-size:13.5px;color:var(--muted);max-width:420px;line-height:1.5}
+  .empty .acts{display:flex;justify-content:center;gap:8px;margin-top:16px}
+  .recipes{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+  .recipe{padding:14px 16px;border:1px solid var(--line);border-radius:13px;background:var(--surface);cursor:pointer;text-align:left;display:flex;flex-direction:column;gap:11px;transition:border-color .15s,box-shadow .15s}
+  .recipe:hover{border-color:var(--line-2);box-shadow:var(--shadow-1)}
+  .recipe p{margin:0;font-size:13.5px;line-height:1.5;color:var(--ink-2)}
+  .recipe p b{color:var(--ink);font-weight:600}
+  .recipe .use{font-size:12px;font-weight:500;color:var(--muted);display:flex;align-items:center;gap:5px}
+
+  /* ---------- Automatizaciones (ref: HoneyBook lista + Plain toggles) ---------- */
+  .tpls{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:28px}
+  .tpl{position:relative;padding:16px;border:1px solid var(--line);border-radius:13px;background:var(--surface);overflow:hidden;cursor:pointer;display:flex;flex-direction:column;gap:10px;transition:box-shadow .15s,border-color .15s}
+  .tpl:hover{border-color:var(--line-2);box-shadow:var(--shadow-1)}
+  .tpl.ai::before{content:"";position:absolute;inset:0 0 auto 0;height:3px;background:var(--hilo);background-size:48px 100%}
+  .tpl b{font-weight:600;font-size:14px}
+  .tpl p{margin:0;font-size:12.5px;color:var(--muted);line-height:1.45}
+  .tpl .badge{position:absolute;top:14px;right:14px}
+  .tablewrap{overflow-x:auto}
+  table{width:100%;border-collapse:collapse;min-width:760px}
+  th{font:500 11px var(--font-mono);text-transform:uppercase;letter-spacing:.07em;color:var(--muted);text-align:left;padding:11px 16px;border-bottom:1px solid var(--line);white-space:nowrap}
+  td{padding:12px 16px;border-bottom:1px solid var(--line);font-size:13.5px;vertical-align:middle}
+  tr:last-child td{border-bottom:0}
+  tbody tr{cursor:pointer;transition:background .12s}
+  tbody tr:hover{background:var(--surface-2)}
+  td b{font-weight:560}
+  td .muted{color:var(--muted)}
+  td .st{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--muted)}
+  .quick{margin-top:28px}
+  .qrow{display:flex;align-items:center;gap:14px;padding:13px 16px;border-bottom:1px solid var(--line)}
+  .qrow:last-child{border-bottom:0}
+  .qrow b{font-weight:560;font-size:13.5px}
+  .qrow p{margin:1px 0 0;font-size:12.5px;color:var(--muted)}
+  .qrow .toggle{margin-left:auto}
+
+  /* ---------- Editor (ref: HoneyBook vertical, Plain panel, Customer.io tipos, Shopify, Buffer, Magnific) ---------- */
+  .ed-top{display:flex;align-items:center;gap:10px;padding:9px 14px;border-bottom:1px solid var(--line);background:var(--surface);flex:none}
+  .ed-top .name{font-weight:600;font-size:14.5px}
+  .ed-top .livestate{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--muted);padding-left:12px;margin-left:4px;border-left:1px solid var(--line)}
+  .ed-top .unsaved{font-size:12px;color:var(--faint);margin-left:auto}
+  .ed-body{flex:1;display:grid;grid-template-columns:1fr 392px;min-height:0}
+  .canvas-wrap{position:relative;min-height:0;overflow:hidden}
+  .canvas{position:absolute;inset:0;overflow:auto;background-color:var(--surface-2);background-image:radial-gradient(#DAD4C7 1px,transparent 1.2px);background-size:18px 18px;padding:40px 24px 140px}
+  .eflow{width:340px;margin:0 auto;display:flex;flex-direction:column;align-items:stretch}
+  .conn{position:relative;display:flex;justify-content:center;height:40px}
+  .conn .ins{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:20px;height:20px;border-radius:50%;background:var(--surface);border:1px solid var(--line-2);display:grid;place-items:center;opacity:0;transition:opacity .15s;cursor:pointer;color:var(--ink-2)}
+  .conn:hover .ins{opacity:1}
+  .conn .ins .i{width:12px;height:12px}
+  .node{cursor:pointer}
+  .node:hover{border-color:var(--line-2)}
+  .node.sel{border-color:var(--anil);box-shadow:0 0 0 3px rgba(52,71,196,.16)}
+  .node .nstate{margin-left:auto}
+  .branch{position:relative;display:grid;grid-template-columns:1fr 1fr;gap:24px;width:580px;margin-left:-120px}
+  .branch::before{content:"";position:absolute;top:0;left:25%;right:25%;height:16px;border:1.6px solid var(--line-2);border-bottom:0;border-radius:12px 12px 0 0}
+  .bcol{display:flex;flex-direction:column;align-items:center;padding-top:16px}
+  .bcol::after{content:"";flex:1;width:1.6px;min-height:18px;background:var(--line-2)}
+  .bcol .node{width:100%}
+  .bpill{font:500 11px var(--font-mono);padding:3px 9px;border-radius:99px;background:var(--surface);border:1px solid var(--line-2);color:var(--ink-2);margin-bottom:10px}
+  .skip{font-size:12px;color:var(--muted);padding:8px 12px;border:1px dashed var(--line-2);border-radius:9px;background:var(--surface)}
+  .merge{position:relative;height:16px;width:580px;margin-left:-120px}
+  .merge::before{content:"";position:absolute;top:0;left:25%;right:25%;height:16px;border:1.6px solid var(--line-2);border-top:0;border-radius:0 0 12px 12px}
+  .end{align-self:center;font:500 11px var(--font-mono);color:var(--muted);padding:5px 11px;border:1px dashed var(--line-2);border-radius:99px;background:var(--surface)}
+  .fbar{position:absolute;left:50%;bottom:18px;transform:translateX(-50%);width:min(560px,calc(100% - 140px));display:flex;align-items:center;gap:10px;padding:7px 7px 7px 14px;background:var(--surface);border:1px solid var(--line-2);border-radius:14px;box-shadow:var(--shadow-3)}
+  .fbar input{flex:1;border:0;outline:0;background:none;font:400 14px var(--font-sans);min-width:0;color:var(--ink)}
+  .fbar input::placeholder{color:var(--faint)}
+  .fbar .send{width:30px;height:30px}
+  .zoom{position:absolute;left:16px;bottom:18px;display:flex;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:10px;box-shadow:var(--shadow-1);font:500 11.5px var(--font-mono);color:var(--muted)}
+  .zoom button{width:30px;height:30px;border:0;background:none;cursor:pointer;color:var(--ink-2);display:grid;place-items:center}
+  .legend{position:absolute;right:16px;top:14px;display:flex;flex-direction:column;gap:6px;padding:8px 10px;border-radius:9px;background:rgba(255,255,255,.8);border:1px solid var(--line);font-size:11.5px;color:var(--muted)}
+  .legend span{display:flex;align-items:center;gap:5px}
+  .legend i{width:8px;height:8px;border-radius:2px}
+
+  .ed-panel{border-left:1px solid var(--line);background:var(--surface);display:flex;flex-direction:column;min-height:0}
+  .ptabs{display:flex;gap:4px;padding:9px 12px;border-bottom:1px solid var(--line);flex:none}
+  .ptabs button{height:28px;padding:0 10px;border-radius:7px;border:0;background:none;font-size:13px;font-weight:500;color:var(--muted);cursor:pointer;display:flex;align-items:center;gap:6px}
+  .ptabs button.on{background:var(--bg);color:var(--ink)}
+  .pbody{flex:1;overflow:auto;padding:16px}
+  .msg-user{margin-left:auto;max-width:92%;background:var(--bg);border-radius:13px 13px 4px 13px;padding:10px 12px;font-size:13.5px;line-height:1.5}
+  .msg-ai{display:flex;gap:10px;font-size:13.5px;line-height:1.55;margin:16px 0 12px;color:var(--ink-2)}
+  .msg-ai svg.mk{width:22px;height:22px;flex:none;margin-top:1px}
+  .clar{border:1px solid var(--line-2);border-radius:14px;overflow:hidden;box-shadow:var(--shadow-1);background:var(--surface)}
+  .clar-q{padding:12px 14px;font-weight:560;font-size:13.5px;line-height:1.45}
+  .opt{display:flex;gap:10px;align-items:center;padding:9px 14px;border-top:1px solid var(--line);cursor:pointer;font-size:13.5px}
+  .opt:hover{background:var(--surface-2)}
+  .opt .k{width:21px;height:21px;border-radius:6px;border:1px solid var(--line-2);display:grid;place-items:center;font:500 11px var(--font-mono);color:var(--muted);flex:none}
+  .opt.on{background:var(--anil-soft)}
+  .opt.on .k{background:var(--anil);border-color:var(--anil);color:#fff}
+  .clar-f{display:flex;align-items:center;gap:6px;padding:9px 12px 9px 14px;border-top:1px solid var(--line);background:var(--surface-2)}
+  .clar-f .pg{font:500 11.5px var(--font-mono);color:var(--muted);margin-right:auto}
+  .clar.done{border-color:#BFDCC9;background:var(--ok-soft)}
+  .clar-done{display:flex;gap:10px;padding:12px 14px;font-size:13px;line-height:1.5;color:var(--ok)}
+  .clar-done b{color:var(--ink)}
+  .prev{margin-top:16px;border:1px solid var(--line);border-radius:14px;background:var(--surface-2);overflow:hidden}
+  .prev-h{display:flex;align-items:center;gap:8px;padding:10px 12px;border-bottom:1px solid var(--line);font-size:12.5px;color:var(--muted)}
+  .prev-h b{color:var(--ink);font-weight:560}
+  .prev-h .badge{margin-left:auto}
+  .prev-b{padding:12px 14px;font-size:13px;line-height:1.6;color:var(--ink-2)}
+  .prev-b ul{margin:6px 0 0;padding-left:18px}
+  mark{background:#FBEBC0;color:inherit;padding:0 2px;border-radius:3px}
+  .refine{display:flex;gap:6px;flex-wrap:wrap;padding:0 14px 12px}
+  .refine .chip{height:27px;font-size:12px;padding:0 10px}
+  .disc{display:flex;gap:8px;margin-top:14px;font-size:12px;color:var(--muted);line-height:1.45}
+  .bsearch{display:flex;align-items:center;gap:8px;height:34px;padding:0 10px;border:1px solid var(--line);border-radius:9px;color:var(--faint);font-size:13px;margin-bottom:6px}
+  .bgrp{font:500 10.5px var(--font-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--faint);padding:14px 2px 7px}
+  .blk{display:flex;align-items:center;gap:10px;padding:7px 10px;border:1px solid var(--line);border-left:3px solid var(--c);border-radius:9px;margin-bottom:6px;font-size:13px;cursor:grab;background:var(--surface)}
+  .blk:hover{border-color:var(--line-2);border-left-color:var(--c)}
+  .blk.t-trigger{--c:var(--ocre)} .blk.t-action{--c:var(--anil)} .blk.t-ai{--c:var(--carmin)} .blk.t-logic{--c:var(--ink-2)}
+  .blk .app{--s:20px}
+  .run{display:flex;gap:10px;padding:11px 2px;border-bottom:1px solid var(--line);font-size:13px;align-items:flex-start}
+  .run b{font-weight:560;display:block}
+  .run small{color:var(--muted);font-size:12px}
+
+  /* ---------- Integraciones (ref: Canny, MagicPath, Zapier, Toggl) ---------- */
+  .isearch{display:flex;align-items:center;gap:8px;height:36px;width:260px;padding:0 12px;border:1px solid var(--line);border-radius:10px;background:var(--surface)}
+  .isearch input{border:0;outline:0;background:none;font:400 13.5px var(--font-sans);flex:1;min-width:0;color:var(--ink)}
+  .utabs{display:flex;gap:24px;border-bottom:1px solid var(--line);margin:0 0 22px}
+  .utabs button{background:none;border:0;padding:10px 0;font-size:13.5px;font-weight:500;color:var(--muted);border-bottom:2px solid transparent;margin-bottom:-1px;cursor:pointer;display:flex;gap:7px;align-items:center}
+  .utabs button.on{color:var(--ink);border-color:var(--ink)}
+  .utabs .n{font:500 11px var(--font-mono);padding:1px 6px;border-radius:99px;background:var(--bg-2);color:var(--ink-2)}
+  .utabs .n.warn{background:var(--warn-soft);color:var(--warn)}
+  .int-layout{display:grid;grid-template-columns:176px 1fr;gap:28px}
+  .cats{display:flex;flex-direction:column;gap:1px}
+  .cats .grp{padding:0 10px 8px}
+  .cats a{padding:6px 10px;border-radius:7px;font-size:13.5px;color:var(--ink-2);cursor:pointer;display:flex;justify-content:space-between}
+  .cats a:hover{background:rgba(27,25,21,.04)}
+  .cats a.on{background:var(--bg-2);color:var(--ink);font-weight:500}
+  .cats a small{font:500 11px var(--font-mono);color:var(--faint)}
+  .igrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(252px,1fr));gap:12px}
+  .icard{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:11px;transition:border-color .15s,box-shadow .15s;animation:aparecer .3s ease both}
+  .icard:hover{border-color:var(--line-2);box-shadow:var(--shadow-1)}
+  .icard.attn{border-color:#EBD08F;background:#FFFCF2}
+  .ihead{display:flex;align-items:center;gap:11px}
+  .ihead b{font-weight:600;font-size:14.5px;display:block;line-height:1.2}
+  .ihandle{font:12px var(--font-mono);color:var(--muted)}
+  .idesc{font-size:13px;color:var(--ink-2);margin:0;line-height:1.45}
+  .imeta{font-size:12px;color:var(--muted);margin:-3px 0 0;line-height:1.4}
+  .icard.attn .imeta{color:var(--warn)}
+  .ifoot{display:flex;align-items:center;gap:8px;margin-top:auto;padding-top:11px;border-top:1px solid var(--line)}
+  .ifoot .btn{margin-left:auto}
+  .missing{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:28px}
+  .missing a{display:flex;align-items:center;gap:14px;padding:18px;border:1px dashed var(--line-2);border-radius:14px;background:var(--surface-2);transition:background .15s}
+  .missing a:hover{background:var(--surface)}
+  .missing b{font-weight:560;display:block}
+  .missing small{font-size:12.5px;color:var(--muted)}
+  .missing .i.lg{margin-left:auto;color:var(--muted)}
+
+  /* Drawer de conexión (ref: Supabase hoja lateral + Mistral nota de privacidad + Zapier credenciales) */
+  .scrim{position:fixed;inset:0;background:rgba(27,25,21,.3);opacity:0;pointer-events:none;transition:opacity .2s;z-index:40}
+  .scrim.on{opacity:1;pointer-events:auto}
+  .drawer{position:fixed;top:8px;right:8px;bottom:8px;width:448px;max-width:calc(100vw - 16px);background:var(--surface);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow-3);transform:translateX(calc(100% + 24px));transition:transform .3s cubic-bezier(.2,.8,.2,1);z-index:50;display:flex;flex-direction:column}
+  .drawer.on{transform:none}
+  .dr-head{display:flex;align-items:center;gap:12px;padding:16px 16px 16px 18px;border-bottom:1px solid var(--line)}
+  .dr-head b{font-weight:600;font-size:16px;display:block}
+  .dr-head small{color:var(--muted);font-size:12.5px}
+  .dr-head .icon-btn{margin-left:auto}
+  .dr-body{flex:1;overflow:auto;padding:18px}
+  .dr-desc{margin:0 0 18px;font-size:13.5px;color:var(--ink-2);line-height:1.55}
+  .field{margin-bottom:18px}
+  .field > label{display:block;font-size:12.5px;font-weight:560;margin-bottom:7px}
+  .handle-row{display:flex;align-items:center;gap:10px;padding:8px 8px 8px 10px;border:1px solid var(--line);border-radius:10px;background:var(--surface-2)}
+  .handle-row code{font:500 13px var(--font-mono);padding:2px 7px;border-radius:6px;background:var(--anil-soft);color:var(--anil)}
+  .handle-row span{font-size:12.5px;color:var(--muted);flex:1}
+  .perms{border:1px solid var(--line);border-radius:12px;overflow:hidden}
+  .perm{display:flex;align-items:center;gap:14px;padding:11px 14px;border-bottom:1px solid var(--line)}
+  .perm:last-child{border-bottom:0}
+  .perm div{flex:1}
+  .perm b{display:flex;align-items:center;gap:6px;font-weight:560;font-size:13.5px}
+  .perm span{font-size:12.5px;color:var(--muted);line-height:1.4}
+  .select{display:flex;align-items:center;justify-content:space-between;height:36px;padding:0 12px;border:1px solid var(--line-2);border-radius:10px;font-size:13.5px;background:var(--surface);cursor:pointer}
+  .field small{display:block;font-size:12px;color:var(--muted);margin-top:6px}
+  .osteps{display:flex;flex-direction:column;gap:10px}
+  .ostep{display:flex;gap:10px;font-size:13px;color:var(--ink-2);line-height:1.45}
+  .ostep .n{width:20px;height:20px;border-radius:6px;border:1px solid var(--line-2);display:grid;place-items:center;font:500 11px var(--font-mono);color:var(--muted);flex:none}
+  .dr-foot{border-top:1px solid var(--line)}
+  .privacy{display:flex;gap:10px;align-items:flex-start;padding:12px 18px;background:var(--surface-2);font-size:12.5px;color:var(--ink-2);line-height:1.5;border-bottom:1px solid var(--line)}
+  .privacy .i{color:var(--ok);margin-top:1px}
+  .dr-actions{display:flex;gap:8px;padding:14px 18px}
+  .dr-actions .btn-ink{flex:1}
+
+  .toast{position:fixed;right:20px;bottom:20px;background:var(--ink);color:#F5F2EB;padding:11px 14px;border-radius:11px;font-size:13px;display:flex;gap:9px;align-items:center;box-shadow:var(--shadow-3);transform:translateY(16px);opacity:0;transition:all .25s;z-index:70;pointer-events:none}
+  .toast.on{transform:none;opacity:1}
+  .toast .i{color:#7FC79C}
+
+  @media (max-width:1180px){ .ed-body{grid-template-columns:1fr 340px} .tpls{grid-template-columns:1fr 1fr} .demo-state span{display:none} }
+  @media (max-width:900px){
+    body{overflow:auto}
+    .shell{grid-template-columns:1fr;height:auto;min-height:100vh}
+    .side{display:none}
+    .main{margin:0;border-radius:0;border:0}
+    .search{display:none}
+    .grid-2,.kpis,.recipes{grid-template-columns:1fr}
+    .kpi + .kpi{border-left:0;border-top:1px solid var(--line)}
+    .ed-body{grid-template-columns:1fr}
+    .ed-panel{display:none}
+    .int-layout{grid-template-columns:1fr}
+    .cats{display:none}
+    .missing{grid-template-columns:1fr}
+    .hello{font-size:36px}
+  }
+</style>
+</head>
+<body data-estado="datos">
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-home" viewBox="0 0 24 24"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></symbol>
+  <symbol id="i-zap" viewBox="0 0 24 24"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/></symbol>
+  <symbol id="i-plug" viewBox="0 0 24 24"><path d="M12 22v-5M9 8V2M15 8V2M18 8v5a4 4 0 0 1-4 4h-4a4 4 0 0 1-4-4V8z"/></symbol>
+  <symbol id="i-activity" viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></symbol>
+  <symbol id="i-grid" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></symbol>
+  <symbol id="i-bell" viewBox="0 0 24 24"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></symbol>
+  <symbol id="i-help" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3M12 17h.01"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-chevd" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol>
+  <symbol id="i-chevr" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></symbol>
+  <symbol id="i-updown" viewBox="0 0 24 24"><path d="m7 15 5 5 5-5M7 9l5-5 5 5"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
+  <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h14M13 5l7 7-7 7"/></symbol>
+  <symbol id="i-back" viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></symbol>
+  <symbol id="i-up" viewBox="0 0 24 24"><path d="M12 19V5M5 12l7-7 7 7"/></symbol>
+  <symbol id="i-at" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M16 8v5a3 3 0 0 0 6 0v-1a10 10 0 1 0-4 8"/></symbol>
+  <symbol id="i-clip" viewBox="0 0 24 24"><path d="m21.4 11.1-9.2 9.2a6 6 0 0 1-8.5-8.5l9.2-9.2a4 4 0 0 1 5.7 5.7l-9.2 9.2a2 2 0 0 1-2.8-2.8l8.5-8.5"/></symbol>
+  <symbol id="i-spark" viewBox="0 0 24 24"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/></symbol>
+  <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></symbol>
+  <symbol id="i-alert" viewBox="0 0 24 24"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4M12 17h.01"/></symbol>
+  <symbol id="i-play" viewBox="0 0 24 24"><path d="M6 4l14 8-14 8z"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></symbol>
+  <symbol id="i-copy" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></symbol>
+  <symbol id="i-more" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/></symbol>
+  <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/></symbol>
+  <symbol id="i-lock" viewBox="0 0 24 24"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></symbol>
+  <symbol id="i-usercheck" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="m16 11 2 2 4-4"/></symbol>
+  <symbol id="i-webhook" viewBox="0 0 24 24"><path d="M18 16.98h-5.99c-1.1 0-1.95.94-2.48 1.9A4 4 0 0 1 2 17c.01-.7.2-1.4.57-2"/><path d="m6 17 3.13-5.78c.53-.97.1-2.18-.5-3.1a4 4 0 1 1 6.89-4.06"/><path d="m12 6 3.13 5.73C15.66 12.7 16.9 13 18 13a4 4 0 0 1 0 8"/></symbol>
+  <symbol id="i-message" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></symbol>
+  <symbol id="i-layers" viewBox="0 0 24 24"><path d="m12 2 10 5-10 5L2 7z"/><path d="m2 17 10 5 10-5M2 12l10 5 10-5"/></symbol>
+  <symbol id="i-pen" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></symbol>
+  <symbol id="i-send" viewBox="0 0 24 24"><path d="m22 2-7 20-4-9-9-4z"/><path d="M22 2 11 13"/></symbol>
+  <symbol id="i-bookmark" viewBox="0 0 24 24"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></symbol>
+  <symbol id="i-mark" viewBox="0 0 24 24">
+    <rect width="24" height="24" rx="6" fill="#1B1915" stroke="none"/>
+    <g fill="none" stroke-width="2.4" stroke-linecap="butt">
+      <path d="M5 8h14" stroke="#3447C4"/><path d="M5 12h14" stroke="#C4402A"/><path d="M5 16h14" stroke="#C98F12"/>
+      <path d="M9 5v5.6M9 13.4V19" stroke="#F5F2EB"/>
+      <path d="M15 5v1.6M15 9.4v5.2M15 17.4V19" stroke="#F5F2EB"/>
+    </g>
+  </symbol>
+</svg>
+
+<div class="shell">
+  <!-- ============================ SIDEBAR ============================ -->
+  <aside class="side">
+    <div class="ws"><svg class="mk"><use href="#i-mark"/></svg><div><b>Pampa Labs</b><small>Workspace · Plan Equipo</small></div><svg class="i sm"><use href="#i-updown"/></svg></div>
+    <button class="btn btn-ink newbtn" data-view="inicio" data-focus-composer><svg class="i sm"><use href="#i-plus"/></svg>Nueva automatización<span class="kbd">N</span></button>
+    <nav class="nav">
+      <a data-view="inicio"><svg class="i"><use href="#i-home"/></svg>Inicio</a>
+      <a data-view="automatizaciones"><svg class="i"><use href="#i-zap"/></svg>Automatizaciones<span class="count" data-when="datos">6</span></a>
+      <a data-view="integraciones"><svg class="i"><use href="#i-plug"/></svg>Integraciones<span class="badge warn" data-when="datos" title="1 requiere atención">1</span></a>
+      <a data-view="actividad"><svg class="i"><use href="#i-activity"/></svg>Actividad</a>
+      <a data-view="plantillas"><svg class="i"><use href="#i-grid"/></svg>Plantillas</a>
+    </nav>
+    <div data-when="datos">
+      <div class="grp">Fijadas</div>
+      <a class="pin" data-view="editor"><span class="stack"><span class="app xs slack">#</span><span class="app xs sheets">S</span></span><span class="t">Resumen semanal de ventas</span></a>
+      <a class="pin" data-view="automatizaciones"><span class="stack"><span class="app xs gmail">M</span><span class="app xs drive">Dr</span></span><span class="t">Facturas de Gmail → Drive</span></a>
+    </div>
+    <div class="side-foot">
+      <!-- ref: Buffer "3/3 channels connected" -->
+      <div class="meter">
+        <div class="mrow"><span>Herramientas conectadas</span><b><span data-when="datos">4 / 6</span><span data-when="nuevo">0 / 6</span></b></div>
+        <div class="mbar"><i class="hilo-bar" data-when="datos" style="width:66%"></i><i data-when="nuevo" style="width:0"></i></div>
+      </div>
+      <!-- ref: Zapier "Included Tasks 119 / 750" -->
+      <div class="meter">
+        <div class="mrow"><span>Tareas del mes</span><b><span data-when="datos">1.284 / 5.000</span><span data-when="nuevo">0 / 5.000</span></b></div>
+        <div class="mbar"><i data-when="datos" style="width:26%"></i><i data-when="nuevo" style="width:0"></i></div>
+        <small>Se renuevan en 12 días</small>
+      </div>
+      <div class="me"><span class="av">MR</span><div><b>Martina Ríos</b><small>Admin</small></div></div>
+    </div>
+  </aside>
+
+  <!-- ============================ MAIN ============================ -->
+  <main class="main">
+    <header class="mhead">
+      <div class="crumb" id="crumb"><b>Inicio</b></div>
+      <div class="search"><svg class="i sm"><use href="#i-search"/></svg>Buscar o pedirle algo a Telar<span class="kbd">Ctrl K</span></div>
+      <div class="demo-state" title="Solo para revisar el diseño"><span>Demo</span><button data-estado-btn="datos" class="on">Con datos</button><button data-estado-btn="nuevo">Cuenta nueva</button></div>
+      <button class="icon-btn" aria-label="Ayuda"><svg class="i"><use href="#i-help"/></svg></button>
+      <button class="icon-btn" aria-label="Notificaciones" data-view="actividad"><svg class="i"><use href="#i-bell"/></svg><span class="pip" data-when="datos"></span></button>
+    </header>
+
+    <!-- ========================== INICIO ========================== -->
+    <section class="view" id="v-inicio">
+      <div class="page narrow">
+        <h1 class="hello" data-when="datos">¿Qué hacemos hoy, <em>Martina?</em></h1>
+        <h1 class="hello" data-when="nuevo">Hola, Martina. <em>Empecemos.</em></h1>
+
+        <!-- ref: Devin, conexión adosada al prompt -->
+        <div class="connect-strip" data-when="nuevo">
+          <svg class="i"><use href="#i-plug"/></svg>Conectá tu primera herramienta para empezar
+          <span class="stack"><span class="app sm slack">#</span><span class="app sm gmail">M</span><span class="app sm drive">Dr</span></span>
+          <button class="btn btn-sm btn-ink" data-connect="slack">Conectar Slack</button>
+        </div>
+        <div class="composer" id="composer">
+          <div class="ctext" id="ctext" contenteditable="true" role="textbox" aria-label="Pedile algo a Telar" data-placeholder="Pedile algo a Telar… Ej: cuando llegue una factura a Gmail, guardala en Drive y avisá en #finanzas"></div>
+          <div class="ctools">
+            <button class="tool" id="btn-at"><svg class="i sm"><use href="#i-at"/></svg>Mencionar</button>
+            <button class="tool" aria-label="Adjuntar"><svg class="i sm"><use href="#i-clip"/></svg></button>
+            <button class="tool"><svg class="i sm"><use href="#i-shield"/></svg>Pedir aprobación antes de enviar<svg class="i sm"><use href="#i-chevd"/></svg></button>
+            <button class="send" id="send" aria-label="Enviar"><svg class="i sm"><use href="#i-up"/></svg></button>
+          </div>
+          <!-- ref: Dropbox Dash "Search connected apps" -->
+          <div class="mentions" id="mentions" hidden>
+            <div class="msearch"><svg class="i sm"><use href="#i-search"/></svg>Buscar en tus herramientas conectadas</div>
+            <div class="mgrp">Canales</div>
+            <div class="mitem" data-app="slack" data-l="#" data-label="#ventas"><span class="app sm slack">#</span><div><b>#ventas</b><small>Slack · 18 miembros · activo hace 5 min</small></div></div>
+            <div class="mitem" data-app="slack" data-l="#" data-label="#finanzas"><span class="app sm slack">#</span><div><b>#finanzas</b><small>Slack · 6 miembros</small></div></div>
+            <div class="mgrp">Documentos y hojas</div>
+            <div class="mitem" data-app="sheets" data-l="S" data-label="Pipeline Q3"><span class="app sm sheets">S</span><div><b>Pipeline Q3</b><small>Google Sheets · editado hace 2 h</small></div></div>
+            <div class="mitem" data-app="drive" data-l="Dr" data-label="Facturas 2026"><span class="app sm drive">Dr</span><div><b>Facturas 2026</b><small>Google Drive · carpeta · hace 3 h</small></div></div>
+            <div class="mitem" data-app="notion" data-l="N" data-label="Onboarding clientes"><span class="app sm notion">N</span><div><b>Onboarding clientes</b><small>Notion · hace 1 día · <span style="color:var(--warn)">requiere reconectar</span></small></div></div>
+          </div>
+        </div>
+        <div class="working-line"><span class="spin"></span>Telar está tejiendo tu automatización…</div>
+        <div class="intents">
+          <button class="chip" data-intent="Resumí "><svg class="i sm"><use href="#i-layers"/></svg>Resumir</button>
+          <button class="chip" data-intent="Pasá los datos de "><svg class="i sm"><use href="#i-arrow"/></svg>Mover datos</button>
+          <button class="chip" data-intent="Avisame en Slack cuando "><svg class="i sm"><use href="#i-bell"/></svg>Avisar</button>
+          <button class="chip" data-intent="Redactá un borrador de "><svg class="i sm"><use href="#i-pen"/></svg>Redactar</button>
+          <button class="chip" data-intent="Todos los lunes a las 9, "><svg class="i sm"><use href="#i-clock"/></svg>Programar</button>
+        </div>
+
+        <!-- ===== Con datos ===== -->
+        <div data-when="datos">
+          <div class="setup-mini">
+            <div class="ring" style="--p:60"><span>3/5</span></div>
+            <div><b>Poné a andar Telar</b><p>Próximo paso: invitá a tu equipo · 1 min</p></div>
+            <button class="btn btn-sm btn-outline">Invitar</button>
+          </div>
+
+          <!-- ref: fal, KPIs con micrográfico + CTA -->
+          <div class="kpis">
+            <div class="kpi">
+              <div class="lbl">Ejecuciones · últimos 7 días</div>
+              <div class="val">1.284</div>
+              <div class="sub"><span class="up">+18%</span> vs. semana anterior</div>
+              <svg class="spark" width="96" height="36" viewBox="0 0 96 36" aria-hidden="true" id="spark-runs"></svg>
+            </div>
+            <div class="kpi">
+              <div class="lbl">Tiempo ahorrado · últimos 7 días</div>
+              <div class="val">18,5 <small>h</small></div>
+              <div class="sub">≈ 3,7 h por día hábil</div>
+              <svg class="spark" width="96" height="36" viewBox="0 0 96 36" aria-hidden="true"><path d="M0 30 L16 26 L32 27 L48 18 L64 20 L80 11 L96 6" fill="none" stroke="var(--ok)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M0 30 L16 26 L32 27 L48 18 L64 20 L80 11 L96 6 V36 H0Z" fill="var(--ok)" opacity=".08"/></svg>
+            </div>
+            <div class="kpi">
+              <div class="lbl">Requieren atención</div>
+              <div class="val">2</div>
+              <div class="sub">1 error · 1 aprobación pendiente</div>
+              <a class="more" data-view="actividad" style="grid-row:2/4;grid-column:2;cursor:pointer">Revisar <svg class="i sm"><use href="#i-arrow"/></svg></a>
+            </div>
+          </div>
+
+          <div class="grid-2">
+            <div class="card">
+              <div class="ch"><h3>Automatizaciones activas</h3><a class="btn btn-sm btn-ghost" data-view="automatizaciones">Ver todas <svg class="i sm"><use href="#i-arrow"/></svg></a></div>
+              <div id="home-autos"></div>
+            </div>
+            <!-- ref: Customer.io "Tasks" con estados -->
+            <div class="card">
+              <div class="ch"><h3>Actividad</h3><a class="btn btn-sm btn-ghost" data-view="actividad">Ver todo <svg class="i sm"><use href="#i-arrow"/></svg></a></div>
+              <div id="home-feed"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ===== Cuenta nueva ===== -->
+        <div data-when="nuevo">
+          <div class="sec-title"><h3>Poné a andar Telar</h3><span>Unos 5 minutos en total</span></div>
+          <div class="card setup">
+            <div class="top"><b>Primeros pasos</b><span class="mono">0 de 5</span><div class="pbar"><i></i></div></div>
+            <div class="step next"><span class="cc"></span><div><b>Conectá tu primera herramienta</b><span class="dur">1 min</span><p>Slack, Gmail o Google Drive son buenos puntos de partida.</p></div><button class="btn btn-sm btn-ink" data-connect="slack">Conectar</button></div>
+            <div class="step"><span class="cc"></span><div><b>Pedile tu primera automatización</b><span class="dur">2 min</span><p>Escribila como se la contarías a un compañero.</p></div><svg class="i" style="color:var(--faint)"><use href="#i-chevr"/></svg></div>
+            <div class="step"><span class="cc"></span><div><b>Probala con datos reales</b><span class="dur">1 min</span><p>Telar la corre una vez y te muestra el resultado antes de activarla.</p></div><svg class="i" style="color:var(--faint)"><use href="#i-chevr"/></svg></div>
+            <div class="step"><span class="cc"></span><div><b>Activala</b><span class="dur">10 s</span><p>Desde ahí la ves en Actividad y podés pausarla cuando quieras.</p></div><svg class="i" style="color:var(--faint)"><use href="#i-chevr"/></svg></div>
+            <div class="step"><span class="cc"></span><div><b>Invitá a tu equipo</b><span class="dur">1 min</span><p>Compartí automatizaciones y aprobaciones con quien corresponda.</p></div><svg class="i" style="color:var(--faint)"><use href="#i-chevr"/></svg></div>
+          </div>
+
+          <div class="sec-title"><h3>Probá con una de estas</h3><span>Tocá una para usarla como punto de partida</span></div>
+          <div class="recipes" id="recipes"></div>
+
+          <!-- ref: Plain, el empty dice qué conexión lo llena -->
+          <div class="sec-title"><h3>Resultados</h3></div>
+          <div class="empty">
+            <div class="eic"><svg class="i"><use href="#i-activity"/></svg></div>
+            <h4>Todavía no hay ejecuciones</h4>
+            <p>Conectá <b>Slack</b> o <b>Gmail</b> y creá tu primera automatización. Acá vas a ver cuántas veces corrió y cuánto tiempo te ahorró.</p>
+            <div class="acts"><button class="btn btn-sm btn-ink" data-connect="slack">Conectar Slack</button><button class="btn btn-sm btn-outline" data-connect="gmail">Conectar Gmail</button></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ====================== AUTOMATIZACIONES ====================== -->
+    <section class="view" id="v-automatizaciones">
+      <div class="page">
+        <div class="ph">
+          <div><h1>Automatizaciones</h1><p>Todo lo que Telar hace por tu equipo, con su estado y sus ejecuciones.</p></div>
+          <div class="act"><button class="btn btn-outline" data-view="inicio" data-focus-composer><svg class="i sm" style="color:var(--carmin)"><use href="#i-spark"/></svg>Crear con IA</button><button class="btn btn-ink"><svg class="i sm"><use href="#i-plus"/></svg>Nueva automatización</button></div>
+        </div>
+        <!-- ref: HoneyBook "Use a template" con "Automate with AI" primero -->
+        <div class="tpls">
+          <div class="tpl ai" data-view="inicio" data-focus-composer><svg class="i lg" style="color:var(--carmin)"><use href="#i-spark"/></svg><b>Describila con tus palabras</b><p>Ej: "Cuando se firme un contrato en Gmail, movelo a Drive y avisá en #ventas".</p></div>
+          <div class="tpl"><span class="badge neutral">Básica</span><div class="stack"><span class="app sm slack">#</span><span class="app sm ai">✦</span></div><b>Resumen diario de un canal</b><p>Cada mañana, lo importante de un canal de Slack.</p></div>
+          <div class="tpl"><span class="badge neutral">Básica</span><div class="stack"><span class="app sm gmail">M</span><span class="app sm drive">Dr</span></div><b>Adjuntos de Gmail a Drive</b><p>Guardá los PDFs que llegan en la carpeta correcta.</p></div>
+          <div class="tpl"><span class="badge anil">Avanzada</span><div class="stack"><span class="app sm gmail">M</span><span class="app sm ai">✦</span><span class="app sm sheets">S</span></div><b>Leads a tu pipeline</b><p>Extraé los datos del mail y cargalos en una hoja.</p></div>
+        </div>
+
+        <div class="card">
+          <div class="tablewrap">
+            <table>
+              <thead><tr><th>Automatización</th><th>Herramientas</th><th>Disparador</th><th>Estado</th><th style="text-align:right">Ejecuciones 7d</th><th>Última ejecución</th><th></th></tr></thead>
+              <tbody id="auto-table"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- ref: Plain "AI automations" como toggles -->
+        <div class="sec-title quick"><h3>Automatizaciones rápidas</h3><span>Se prenden con un toggle, sin armar nada</span></div>
+        <div class="card">
+          <div class="qrow"><span class="app slack">#</span><div><b>Resumen diario de canales</b><p>Cada mañana, un resumen de lo que te perdiste en los canales que elijas.</p></div><button class="toggle on" aria-label="Resumen diario"></button></div>
+          <div class="qrow"><span class="stack"><span class="app gmail">M</span><span class="app drive">Dr</span></span><div><b>Guardar adjuntos de Gmail en Drive</b><p>Los PDFs que te llegan se archivan por remitente y mes.</p></div><button class="toggle" aria-label="Adjuntos a Drive"></button></div>
+          <div class="qrow"><span class="stack"><span class="app slack">#</span><span class="app notion">N</span></span><div><b>Tareas desde menciones</b><p>Si te mencionan en Slack con un pedido, Telar crea la tarea en Notion.</p></div><button class="toggle" aria-label="Tareas desde menciones"></button></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- =========================== EDITOR =========================== -->
+    <section class="view" id="v-editor">
+      <!-- ref: HoneyBook header (Active, Test run, Activate) -->
+      <div class="ed-top">
+        <button class="icon-btn" data-view="automatizaciones" aria-label="Volver"><svg class="i"><use href="#i-back"/></svg></button>
+        <span class="stack"><span class="app sm slack">#</span><span class="app sm ai">✦</span><span class="app sm sheets">S</span></span>
+        <span class="name">Resumen semanal de ventas</span>
+        <span class="badge neutral" id="ed-status">Borrador</span>
+        <span class="livestate"><button class="toggle" id="ed-toggle" aria-label="Activa"></button><span id="ed-toggle-lbl">Pausada</span></span>
+        <span class="unsaved">Guardado hace un momento</span>
+        <button class="btn btn-outline" id="btn-test"><svg class="i sm"><use href="#i-play"/></svg>Probar</button>
+        <button class="btn btn-ink" id="btn-activate">Activar</button>
+      </div>
+      <div class="ed-body">
+        <div class="canvas-wrap">
+          <div class="canvas">
+            <div class="eflow" id="eflow">
+              <div class="node t-trigger"><div class="nmain"><span class="app clock"><svg class="i sm"><use href="#i-clock"/></svg></span><div class="ntxt"><div class="ntype">Disparador · Programado</div><div class="ntitle">Cada lunes a las 9:00</div><div class="nsub">Semanal · horario del workspace</div></div><span class="nstate"></span></div></div>
+              <div class="conn" data-trama="40"><span class="ins"><svg class="i"><use href="#i-plus"/></svg></span></div>
+              <div class="node t-action"><div class="nmain"><span class="app slack">#</span><div class="ntxt"><div class="ntype">Slack</div><div class="ntitle">Leer mensajes de #ventas</div><div class="nsub">Últimos 7 días · incluye hilos</div></div><span class="nstate"></span></div></div>
+              <div class="conn" data-trama="40"><span class="ins"><svg class="i"><use href="#i-plus"/></svg></span></div>
+              <div class="node t-ai"><div class="nmain"><span class="app ai"><svg class="i sm"><use href="#i-spark"/></svg></span><div class="ntxt"><div class="ntype">IA</div><div class="ntitle">Resumir y detectar deals nuevos</div><div class="nsub">5 puntos · tono neutro</div></div><span class="nstate"></span></div></div>
+              <div class="conn" data-trama="40"><span class="ins"><svg class="i"><use href="#i-plus"/></svg></span></div>
+              <div class="node t-logic"><div class="nmain"><span class="app logic">?</span><div class="ntxt"><div class="ntype">Condición</div><div class="ntitle">¿Hay deals nuevos?</div></div><span class="nstate"></span></div></div>
+              <div class="branch">
+                <div class="bcol">
+                  <span class="bpill">Sí</span>
+                  <div class="node t-action sel" id="node-sheets">
+                    <div class="nmain"><span class="app sheets">S</span><div class="ntxt"><div class="ntype">Google Sheets</div><div class="ntitle">Agregar filas en Pipeline Q3</div><div class="nsub">Una fila por deal</div></div><span class="nstate"></span></div>
+                    <div class="nfoot warn" id="sheets-warn"><svg class="i sm"><use href="#i-alert"/></svg>Falta elegir la columna del monto</div>
+                  </div>
+                </div>
+                <div class="bcol"><span class="bpill">No</span><span class="skip">Seguir sin agregar filas</span></div>
+              </div>
+              <div class="merge"></div>
+              <div class="conn" data-trama="34"></div>
+              <div class="node t-action" id="node-publish"><div class="nmain"><span class="app slack">#</span><div class="ntxt"><div class="ntype">Slack</div><div class="ntitle">Publicar resumen en #ventas</div><div class="nsub">Como Telar · mencionando a @equipo-ventas</div></div><span class="nstate"></span></div><div class="nfoot"><svg class="i sm"><use href="#i-usercheck"/></svg>Espera tu aprobación antes de publicar</div></div>
+              <div class="conn" data-trama="28"></div>
+              <span class="end">Fin</span>
+            </div>
+          </div>
+          <div class="legend"><span><i style="background:var(--ocre)"></i>Disparador</span><span><i style="background:var(--anil)"></i>Acción</span><span><i style="background:var(--carmin)"></i>IA</span><span><i style="background:var(--ink-2)"></i>Lógica</span></div>
+          <div class="zoom"><button aria-label="Alejar">−</button><span>100%</span><button aria-label="Acercar">+</button></div>
+          <!-- ref: Magnific, prompt contextual sobre el objeto -->
+          <div class="fbar"><svg class="i" style="color:var(--carmin)"><use href="#i-spark"/></svg><input placeholder="Describí qué cambiar… ej: “si falla, avisame por mail”" aria-label="Describí qué cambiar"><button class="send" aria-label="Enviar"><svg class="i sm"><use href="#i-up"/></svg></button></div>
+        </div>
+
+        <aside class="ed-panel">
+          <!-- ref: Plain "Add block / Workflow runs" -->
+          <div class="ptabs" data-tabgroup="ed">
+            <button class="on" data-tab="asistente"><svg class="i sm"><use href="#i-spark"/></svg>Asistente</button>
+            <button data-tab="pasos">Pasos</button>
+            <button data-tab="ejecuciones">Ejecuciones</button>
+          </div>
+          <div class="pbody">
+            <div data-pane="ed:asistente">
+              <div class="msg-user">Todos los lunes a las 9, resumí lo que se habló en <span class="mention"><span class="app slack">#</span>#ventas</span>, sumá los deals nuevos a <span class="mention"><span class="app sheets">S</span>Pipeline Q3</span> y avisá en el canal.</div>
+              <div class="msg-ai"><svg class="mk"><use href="#i-mark"/></svg><span>Armé la automatización con 6 pasos. Antes de activarla necesito confirmar dos cosas:</span></div>
+              <!-- ref: Shopify Sidekick, pregunta con opciones numeradas -->
+              <div class="clar" id="clar"></div>
+
+              <!-- ref: Buffer borrador revisable + Airtable resaltado -->
+              <div class="prev">
+                <div class="prev-h"><span class="app sm slack">#</span><b>#ventas</b><span>Vista previa</span><span class="badge anil">Borrador</span></div>
+                <div class="prev-b">
+                  <div style="font-size:12px;color:var(--muted);margin-bottom:6px">Con datos reales de la semana pasada</div>
+                  <b>Resumen de #ventas · semana del 1 al 5 de septiembre</b>
+                  <ul>
+                    <li><mark>3 deals nuevos</mark>: Kiosco (<mark>USD 12.400</mark>), Umbral (<mark>USD 8.900</mark>) y Bruma (<mark>USD 4.100</mark>).</li>
+                    <li>Nórdika pidió una demo para el jueves.</li>
+                    <li>Se destrabó la propuesta de Ferro &amp; Co.; falta la firma.</li>
+                  </ul>
+                </div>
+                <div class="refine"><button class="chip">Más corto</button><button class="chip">Más formal</button><button class="chip">Sumar responsables</button><button class="chip"><svg class="i sm"><use href="#i-refresh"/></svg>Regenerar</button></div>
+              </div>
+              <div class="disc"><svg class="i sm"><use href="#i-shield"/></svg><span>Telar puede equivocarse. Los pasos que publican o envían esperan tu aprobación antes de ejecutarse.</span></div>
+            </div>
+
+            <div data-pane="ed:pasos" hidden>
+              <div class="bsearch"><svg class="i sm"><use href="#i-search"/></svg>Buscar pasos…</div>
+              <div class="bgrp">Disparadores</div>
+              <div class="blk t-trigger"><span class="app clock"><svg class="i sm"><use href="#i-clock"/></svg></span>Programado</div>
+              <div class="blk t-trigger"><span class="app slack">#</span>Mensaje nuevo en un canal</div>
+              <div class="blk t-trigger"><span class="app gmail">M</span>Mail nuevo que cumple un filtro</div>
+              <div class="blk t-trigger"><span class="app sheets">S</span>Fila nueva en una hoja</div>
+              <div class="bgrp">Acciones</div>
+              <div class="blk t-action"><span class="app slack">#</span>Publicar en Slack</div>
+              <div class="blk t-action"><span class="app gmail">M</span>Enviar o redactar un mail</div>
+              <div class="blk t-action"><span class="app docs">D</span>Crear un doc desde plantilla</div>
+              <div class="blk t-action"><span class="app sheets">S</span>Agregar o actualizar filas</div>
+              <div class="blk t-action"><span class="app notion">N</span>Crear página en Notion</div>
+              <div class="bgrp">IA</div>
+              <div class="blk t-ai"><span class="app ai">✦</span>Resumir</div>
+              <div class="blk t-ai"><span class="app ai">✦</span>Extraer datos</div>
+              <div class="blk t-ai"><span class="app ai">✦</span>Clasificar</div>
+              <div class="blk t-ai"><span class="app ai">✦</span>Redactar</div>
+              <div class="bgrp">Lógica</div>
+              <div class="blk t-logic"><span class="app logic">?</span>Condición</div>
+              <div class="blk t-logic"><span class="app logic"><svg class="i sm"><use href="#i-clock"/></svg></span>Esperar</div>
+              <div class="blk t-logic"><span class="app logic"><svg class="i sm"><use href="#i-usercheck"/></svg></span>Pedir aprobación</div>
+            </div>
+
+            <div data-pane="ed:ejecuciones" hidden>
+              <div class="run"><span class="sic wait"><svg class="i"><use href="#i-clock"/></svg></span><div><b>Prueba · hoy 10:42</b><small>Esperando tu aprobación en el paso 6</small></div></div>
+              <div class="run"><span class="sic ok"><svg class="i"><use href="#i-check"/></svg></span><div><b>lun 8 sep · 9:00</b><small>6 de 6 pasos · 14 s · 3 filas agregadas</small></div></div>
+              <div class="run"><span class="sic ok"><svg class="i"><use href="#i-check"/></svg></span><div><b>lun 1 sep · 9:00</b><small>6 de 6 pasos · 11 s · sin deals nuevos</small></div></div>
+              <div class="run"><span class="sic err"><svg class="i"><use href="#i-x"/></svg></span><div><b>lun 25 ago · 9:00</b><small>Falló en el paso 5: Sheets sin permiso de escritura · <a style="color:var(--anil);cursor:pointer" data-view="integraciones">Revisar permisos</a></small></div></div>
+              <div class="run"><span class="sic ok"><svg class="i"><use href="#i-check"/></svg></span><div><b>lun 18 ago · 9:00</b><small>6 de 6 pasos · 12 s</small></div></div>
+            </div>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <!-- ======================== INTEGRACIONES ======================== -->
+    <section class="view" id="v-integraciones">
+      <div class="page">
+        <div class="ph">
+          <div><h1>Integraciones</h1><p>Conectá tus herramientas y elegí qué puede hacer Telar en cada una.</p></div>
+          <div class="act"><label class="isearch"><svg class="i sm" style="color:var(--faint)"><use href="#i-search"/></svg><input id="isearch" placeholder="Buscar herramienta"></label></div>
+        </div>
+        <!-- ref: Canny "All / Active" -->
+        <div class="utabs" id="itabs">
+          <button class="on" data-f="all">Todas <span class="n" id="n-all">12</span></button>
+          <button data-f="ok">Conectadas <span class="n" id="n-ok">4</span></button>
+          <button data-f="attn">Requieren atención <span class="n warn" id="n-attn">1</span></button>
+        </div>
+        <div class="int-layout">
+          <div class="cats" id="cats">
+            <div class="grp">Categorías</div>
+            <a class="on" data-c="all">Todas</a>
+            <a data-c="comunicacion">Comunicación</a>
+            <a data-c="email">Email</a>
+            <a data-c="documentos">Documentos</a>
+            <a data-c="datos">Datos y hojas</a>
+            <a data-c="crm">CRM</a>
+            <a data-c="proyectos">Proyectos</a>
+            <a data-c="dev">Desarrollo</a>
+          </div>
+          <div>
+            <div class="igrid" id="igrid"></div>
+            <!-- ref: Toggl "Can't find an integration?" -->
+            <div class="missing">
+              <a href="#"><span class="app lg webhook"><svg class="i sm"><use href="#i-webhook"/></svg></span><div><b>Conectala por webhook</b><small>Mandá y recibí datos de cualquier app con una URL.</small></div><svg class="i lg"><use href="#i-arrow"/></svg></a>
+              <a href="#"><span class="app lg" style="background:var(--bg-2);color:var(--ink-2)"><svg class="i sm"><use href="#i-message"/></svg></span><div><b>Pedinos la integración</b><small>Votá o sugerí herramientas. Priorizamos según tus votos.</small></div><svg class="i lg"><use href="#i-arrow"/></svg></a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================== ACTIVIDAD ========================== -->
+    <section class="view" id="v-actividad">
+      <div class="page narrow">
+        <div class="ph"><div><h1>Actividad</h1><p>Cada ejecución de Telar, con su resultado. Lo que espera tu aprobación aparece primero.</p></div></div>
+        <div class="utabs" data-tabgroup="act">
+          <button class="on" data-tab="todo">Todo</button>
+          <button data-tab="aprob">Esperando aprobación <span class="n warn">1</span></button>
+          <button data-tab="err">Errores <span class="n">1</span></button>
+        </div>
+        <div class="card" data-pane="act:todo" id="act-feed"></div>
+        <div class="card" data-pane="act:aprob" id="act-aprob" hidden></div>
+        <div class="card" data-pane="act:err" id="act-err" hidden></div>
+      </div>
+    </section>
+
+    <!-- ========================== PLANTILLAS ========================== -->
+    <section class="view" id="v-plantillas">
+      <div class="page">
+        <div class="ph"><div><h1>Plantillas</h1><p>Automatizaciones listas para adaptar con tus propias herramientas.</p></div></div>
+        <div class="utabs" data-tabgroup="pl">
+          <button class="on" data-tab="equipo">De tu equipo</button>
+          <button data-tab="telar">De Telar</button>
+        </div>
+        <!-- Empty state con CTA (anti-referencia v0 → corregido) -->
+        <div data-pane="pl:equipo">
+          <div class="empty" style="padding:56px 24px">
+            <div class="eic"><svg class="i"><use href="#i-bookmark"/></svg></div>
+            <h4>Tu equipo todavía no guardó plantillas</h4>
+            <p>Guardá cualquier automatización como plantilla para que otros la reutilicen con sus propias cuentas y canales.</p>
+            <div class="acts"><button class="btn btn-sm btn-outline" data-tab-go="pl:telar">Ver plantillas de Telar</button><button class="btn btn-sm btn-ink" data-view="automatizaciones">Elegir una automatización</button></div>
+          </div>
+        </div>
+        <div data-pane="pl:telar" hidden><div class="recipes" id="recipes-2"></div></div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<!-- ======================= DRAWER DE CONEXIÓN ======================= -->
+<div class="scrim" id="scrim"></div>
+<aside class="drawer" id="drawer" aria-hidden="true" aria-label="Conectar herramienta">
+  <div class="dr-head"><span class="app xl" id="dr-tile"></span><div><b id="dr-name"></b><small id="dr-cat"></small></div><button class="icon-btn" data-close aria-label="Cerrar"><svg class="i"><use href="#i-x"/></svg></button></div>
+  <div class="dr-body">
+    <p class="dr-desc" id="dr-desc"></p>
+    <!-- ref: Mistral "Reference" -->
+    <div class="field"><label>Referencia en tus pedidos</label><div class="handle-row"><code id="dr-handle"></code><span>Escribila en un pedido para usar esta herramienta.</span><button class="icon-btn" aria-label="Copiar"><svg class="i sm"><use href="#i-copy"/></svg></button></div></div>
+    <!-- ref: Supabase permisos con microcopy -->
+    <div class="field"><label>Qué va a poder hacer Telar</label>
+      <div class="perms">
+        <div class="perm"><div><b>Leer contenido <svg class="i sm" style="color:var(--faint)"><use href="#i-lock"/></svg></b><span>Necesario para cualquier automatización.</span></div><button class="toggle on locked" aria-label="Leer contenido" disabled></button></div>
+        <div class="perm"><div><b>Crear contenido nuevo</b><span>Nunca borra ni pisa lo que ya existe.</span></div><button class="toggle on" aria-label="Crear contenido"></button></div>
+        <div class="perm"><div><b>Editar contenido existente</b><span>Te va a pedir aprobación antes de cada edición.</span></div><button class="toggle" aria-label="Editar contenido"></button></div>
+        <div class="perm"><div><b>Enviar o compartir en tu nombre</b><span>Siempre con tu aprobación previa.</span></div><button class="toggle" aria-label="Enviar en tu nombre"></button></div>
+      </div>
+    </div>
+    <div class="field"><label>Alcance</label><div class="select"><span id="dr-scope"></span><svg class="i sm"><use href="#i-chevd"/></svg></div><small>Podés ampliarlo después desde esta misma pantalla.</small></div>
+    <div class="field"><label>Cómo sigue</label>
+      <div class="osteps">
+        <div class="ostep"><span class="n">1</span><span>Se abre una ventana de <b id="dr-provider"></b> para que autorices el acceso.</span></div>
+        <div class="ostep"><span class="n">2</span><span>Volvés a Telar y la herramienta queda lista para mencionarla con <b id="dr-handle2"></b>.</span></div>
+      </div>
+    </div>
+  </div>
+  <div class="dr-foot">
+    <div class="privacy"><svg class="i"><use href="#i-shield"/></svg><span>Tus datos quedan en tu workspace. Telar no los usa para entrenar modelos, tus credenciales se guardan cifradas y podés desconectar cuando quieras.</span></div>
+    <div class="dr-actions"><button class="btn btn-outline" data-close>Cancelar</button><button class="btn btn-ink" id="dr-go"></button></div>
+  </div>
+</aside>
+
+<div class="toast" id="toast"><svg class="i"><use href="#i-check"/></svg><span id="toast-t"></span></div>
+
+<script>
+const $ = (s, el = document) => el.querySelector(s);
+const $$ = (s, el = document) => [...el.querySelectorAll(s)];
+const ic = (id, cls = 'i sm') => `<svg class="${cls}"><use href="#i-${id}"/></svg>`;
+
+/* ---------- Datos de ejemplo ---------- */
+const L = {slack:'#', gmail:'M', docs:'D', sheets:'S', notion:'N', drive:'Dr', calendar:'31', hubspot:'H', trello:'T', jira:'J', airtable:'A', webhook:'{}', ai:'✦'};
+const tile = (a, size = 'sm') => `<span class="app ${size} ${a}">${L[a]}</span>`;
+const stack = (apps, size = 'sm') => `<span class="stack">${apps.map(a => tile(a, size)).join('')}</span>`;
+
+const AUTOS = [
+  {n:'Resumen semanal de ventas', apps:['slack','ai','sheets'], trig:'Cada lunes 9:00', st:'draft', runs:12, last:'hace 2 días', view:'editor'},
+  {n:'Facturas de Gmail → Drive', apps:['gmail','drive','slack'], trig:'Mail nuevo con PDF adjunto', st:'on', runs:214, last:'hace 4 min'},
+  {n:'Clasificar pedidos de #soporte', apps:['slack','ai','notion'], trig:'Mensaje nuevo en #soporte', st:'on', runs:388, last:'hace 12 min'},
+  {n:'Leads de formulario al pipeline', apps:['gmail','ai','sheets'], trig:'Mail nuevo con etiqueta “Leads”', st:'on', runs:96, last:'hace 1 h'},
+  {n:'Minutas de reuniones a Notion', apps:['docs','ai','notion'], trig:'Doc nuevo en “Reuniones”', st:'attn', runs:31, last:'hace 2 días'},
+  {n:'Brief antes de reuniones', apps:['calendar','gmail','docs'], trig:'30 min antes de cada evento', st:'off', runs:0, last:'—'}
+];
+const stateCell = a => ({
+  on:   `<span class="st"><button class="toggle on" aria-label="Activa"></button>Activa</span>`,
+  off:  `<span class="st"><button class="toggle" aria-label="Pausada"></button>Pausada</span>`,
+  draft:`<span class="badge neutral">Borrador · falta 1 dato</span>`,
+  attn: `<span class="badge warn">${ic('alert')}Falta autorizar Notion</span>`
+}[a.st]);
+
+const FEED = [
+  {st:'wait', t:'Esperando tu aprobación para publicar el resumen en <b>#ventas</b>', a:'Resumen semanal de ventas', time:'hace 3 min', act:`<button class="btn btn-sm btn-ink" data-view="editor">Revisar</button>`},
+  {st:'ok', t:'Guardó <b>Factura-0932.pdf</b> en <b>Facturas 2026</b>', a:'Facturas de Gmail → Drive', time:'hace 4 min'},
+  {st:'ok', t:'Clasificó 6 pedidos nuevos de <b>#soporte</b>', a:'Clasificar pedidos de #soporte', time:'hace 12 min'},
+  {st:'ok', t:'Agregó 2 leads a <b>Pipeline Q3</b>', a:'Leads de formulario al pipeline', time:'hace 1 h'},
+  {st:'err', t:'No pudo crear la página en <b>Notion</b>: el acceso venció', a:'Minutas de reuniones a Notion', time:'hace 2 h', act:`<button class="btn btn-sm btn-outline" data-connect="notion">Reconectar</button>`},
+  {st:'ok', t:'Guardó <b>Factura-0931.pdf</b> en <b>Facturas 2026</b>', a:'Facturas de Gmail → Drive', time:'hace 3 h'},
+  {st:'ok', t:'Resumió 48 mensajes de <b>#producto</b>', a:'Resumen diario de canales', time:'hace 5 h'}
+];
+const SIC = {ok:ic('check','i'), wait:ic('clock','i'), err:ic('x','i')};
+const feedItem = f => `<div class="fitem"><span class="sic ${f.st}">${SIC[f.st]}</span><div><p>${f.t}</p><div class="meta"><span>${f.a}</span>·<span>${f.time}</span>${f.act || ''}</div></div></div>`;
+
+const RECIPES = [
+  {apps:['gmail','drive','slack'], html:'Cuando llegue un mail con factura a <b>Gmail</b>, guardá el PDF en <b>Drive</b> y avisá en <b>#finanzas</b>.'},
+  {apps:['slack','ai','gmail'], html:'Todos los viernes, resumí lo que pasó en <b>#producto</b> y mandalo por <b>Gmail</b> al equipo.'},
+  {apps:['sheets','notion'], html:'Cada fila nueva en <b>Sheets</b> con estado “Urgente”, creá una tarea en <b>Notion</b> y asignala.'},
+  {apps:['calendar','gmail','docs'], html:'Antes de cada reunión del <b>Calendar</b>, armá un brief en <b>Docs</b> con los últimos mails del cliente.'}
+];
+
+const INTS = [
+  {id:'slack', n:'Slack', h:'@slack', cat:'comunicacion', catL:'Comunicación', prov:'Slack', st:'ok', d:'Leé canales, publicá mensajes y respondé hilos.', meta:'pampa-labs · usada en 5 automatizaciones', scope:'Solo #ventas, #finanzas y #soporte'},
+  {id:'gmail', n:'Gmail', h:'@gmail', cat:'email', catL:'Email · Google Workspace', prov:'Google', st:'ok', ro:true, d:'Filtrá correos, extraé adjuntos y redactá respuestas.', meta:'martina@pampalabs.com · usada en 3', scope:'Solo las etiquetas “Facturas” y “Leads”'},
+  {id:'sheets', n:'Google Sheets', h:'@sheets', cat:'datos', catL:'Datos · Google Workspace', prov:'Google', st:'ok', d:'Agregá filas, actualizá celdas y leé tablas.', meta:'Usada en 2 automatizaciones', scope:'Solo las hojas que elijas'},
+  {id:'drive', n:'Google Drive', h:'@drive', cat:'documentos', catL:'Archivos · Google Workspace', prov:'Google', st:'ok', d:'Guardá, mové y organizá archivos.', meta:'Usada en 1 automatización', scope:'Solo la carpeta “Administración”'},
+  {id:'notion', n:'Notion', h:'@notion', cat:'documentos', catL:'Documentos', prov:'Notion', st:'attn', d:'Creá páginas y actualizá bases de datos.', meta:'El acceso venció el 9/9 · 2 automatizaciones pausadas', scope:'Solo las páginas que compartas con Telar'},
+  {id:'docs', n:'Google Docs', h:'@docs', cat:'documentos', catL:'Documentos · Google Workspace', prov:'Google', st:'no', d:'Creá documentos desde plantillas y leé su contenido.', scope:'Solo la carpeta “Operaciones”'},
+  {id:'calendar', n:'Google Calendar', h:'@calendar', cat:'comunicacion', catL:'Calendario · Google Workspace', prov:'Google', st:'no', d:'Reaccioná a eventos y agendá reuniones.', scope:'Solo tu calendario principal'},
+  {id:'hubspot', n:'HubSpot', h:'@hubspot', cat:'crm', catL:'CRM', prov:'HubSpot', st:'no', d:'Creá contactos y actualizá deals.', scope:'Contactos y deals'},
+  {id:'trello', n:'Trello', h:'@trello', cat:'proyectos', catL:'Proyectos', prov:'Trello', st:'no', d:'Creá tarjetas y movelas entre listas.', scope:'Solo los tableros que elijas'},
+  {id:'jira', n:'Jira', h:'@jira', cat:'proyectos', catL:'Proyectos', prov:'Atlassian', st:'no', d:'Creá issues y seguí su estado.', scope:'Solo los proyectos que elijas'},
+  {id:'airtable', n:'Airtable', h:'@airtable', cat:'datos', catL:'Datos', prov:'Airtable', st:'no', d:'Leé y actualizá registros de tus bases.', scope:'Solo las bases que elijas'},
+  {id:'webhook', n:'Webhooks', h:'@webhook', cat:'dev', catL:'Desarrollo', prov:'Telar', st:'no', d:'Conectá cualquier herramienta con una URL.', scope:'Una URL por automatización'}
+];
+
+/* ---------- Render ---------- */
+function renderHome(){
+  $('#home-autos').innerHTML = AUTOS.slice(0, 4).map(a => `
+    <div class="arow" ${a.view ? `data-view="${a.view}"` : ''}>
+      ${stack(a.apps)}
+      <div><b>${a.n}</b><small>${a.trig}</small></div>
+      <span class="runs">${a.runs}</span>
+      ${a.st === 'on' ? `<button class="toggle on" aria-label="Activa"></button>` : a.st === 'attn' ? `<span class="badge warn">${ic('alert')}Notion</span>` : a.st === 'draft' ? `<span class="badge neutral">Borrador</span>` : `<button class="toggle" aria-label="Pausada"></button>`}
+    </div>`).join('');
+  $('#home-feed').innerHTML = FEED.slice(0, 5).map(feedItem).join('');
+  $('#act-feed').innerHTML = FEED.map(feedItem).join('');
+  $('#act-aprob').innerHTML = FEED.filter(f => f.st === 'wait').map(feedItem).join('');
+  $('#act-err').innerHTML = FEED.filter(f => f.st === 'err').map(feedItem).join('');
+  $('#auto-table').innerHTML = AUTOS.map(a => `
+    <tr ${a.view ? `data-view="${a.view}"` : ''}>
+      <td><b>${a.n}</b></td>
+      <td>${stack(a.apps)}</td>
+      <td class="muted">${a.trig}</td>
+      <td>${stateCell(a)}</td>
+      <td style="text-align:right" class="mono">${a.runs}</td>
+      <td class="muted">${a.last}</td>
+      <td><button class="icon-btn" aria-label="Más opciones">${ic('more','i')}</button></td>
+    </tr>`).join('');
+  const rec = RECIPES.map((r, i) => `<button class="recipe" data-recipe="${i}">${stack(r.apps)}<p>${r.html}</p><span class="use">Usar ${ic('arrow')}</span></button>`).join('');
+  $('#recipes').innerHTML = rec;
+  $('#recipes-2').innerHTML = rec;
+  // Sparkline de barras
+  const vals = [120, 160, 140, 210, 190, 230, 234], max = Math.max(...vals);
+  $('#spark-runs').innerHTML = vals.map((v, i) => `<rect x="${i * 14}" y="${36 - v / max * 34}" width="9" height="${v / max * 34}" rx="2" fill="${i === vals.length - 1 ? 'var(--anil)' : '#C9CEEF'}"/>`).join('');
+}
+
+let iFilter = 'all', iCat = 'all', iQuery = '';
+function renderInts(){
+  const list = INTS.filter(x => (iFilter === 'all' || x.st === iFilter) && (iCat === 'all' || x.cat === iCat) && x.n.toLowerCase().includes(iQuery));
+  $('#igrid').innerHTML = list.map(x => {
+    // Estados explícitos (ref: Canny, MagicPath, Zapier "Missing authorization")
+    const badge = x.st === 'ok' ? `<span class="badge ok"><span class="dot"></span>Conectada</span>`
+      : x.st === 'attn' ? `<span class="badge warn">${ic('alert')}Requiere atención</span>`
+      : `<span class="badge neutral">Sin conectar</span>`;
+    const btn = x.st === 'ok' ? `<button class="btn btn-sm btn-outline">Administrar</button>`
+      : x.st === 'attn' ? `<button class="btn btn-sm btn-ink" data-connect="${x.id}">Reconectar</button>`
+      : `<button class="btn btn-sm btn-outline" data-connect="${x.id}">Conectar</button>`;
+    return `<div class="icard ${x.st === 'attn' ? 'attn' : ''}">
+      <div class="ihead">${tile(x.id, 'lg')}<div><b>${x.n}</b><span class="ihandle">${x.h}${x.ro ? ' · solo lectura' : ''}</span></div></div>
+      <p class="idesc">${x.d}</p>
+      ${x.meta ? `<p class="imeta">${x.meta}</p>` : ''}
+      <div class="ifoot">${badge}${btn}</div>
+    </div>`;
+  }).join('') || `<div class="empty" style="grid-column:1/-1"><div class="eic">${ic('search','i')}</div><h4>No encontramos “${iQuery}”</h4><p>Probá conectarla por webhook o pedinos la integración.</p></div>`;
+  $('#n-all').textContent = INTS.length;
+  $('#n-ok').textContent = INTS.filter(x => x.st === 'ok').length;
+  $('#n-attn').textContent = INTS.filter(x => x.st === 'attn').length;
+}
+
+/* ---------- Clarificación (ref: Shopify) ---------- */
+const QS = [
+  {q:'¿En qué columna de <span class="mention"><span class="app sheets">S</span>Pipeline Q3</span> va el monto de cada deal?', o:['Monto (USD)', 'Valor estimado', 'Crear una columna nueva', 'Otra…'], sel:0},
+  {q:'¿Quién aprueba el resumen antes de publicarlo en <b>#ventas</b>?', o:['Yo (Martina)', 'Cualquier admin del canal', 'Publicar sin aprobación', 'Otra persona…'], sel:0}
+];
+let qi = 0;
+function renderClar(){
+  const c = $('#clar');
+  if (qi >= QS.length){
+    c.classList.add('done');
+    c.innerHTML = `<div class="clar-done">${ic('check','i')}<span><b>Listo, completé los datos que faltaban.</b><br>El monto va en “${QS[0].o[QS[0].sel]}” y el resumen lo aprueba: ${QS[1].o[QS[1].sel].toLowerCase()}. Ya podés probarla.</span></div>`;
+    const w = $('#sheets-warn'); if (w) w.remove();
+    $('#ed-status').className = 'badge ok'; $('#ed-status').textContent = 'Lista para activar';
+    return;
+  }
+  const q = QS[qi];
+  c.innerHTML = `<div class="clar-q">${q.q}</div>` +
+    q.o.map((o, i) => `<div class="opt ${i === q.sel ? 'on' : ''}" data-opt="${i}"><span class="k">${i + 1}</span>${i === 3 ? `<span style="color:var(--muted)">${o}</span>` : o}</div>`).join('') +
+    `<div class="clar-f"><span class="pg">${qi + 1} de ${QS.length}</span><button class="btn btn-sm btn-ghost" data-clar="skip">Saltear</button><button class="btn btn-sm btn-ink" data-clar="next">Siguiente ↵</button></div>`;
+}
+
+/* ---------- Navegación ---------- */
+const TITLES = {inicio:'Inicio', automatizaciones:'Automatizaciones', integraciones:'Integraciones', actividad:'Actividad', plantillas:'Plantillas'};
+function go(view){
+  if (!$('#v-' + view)) view = 'inicio';
+  $$('.view').forEach(v => v.classList.toggle('on', v.id === 'v-' + view));
+  const navKey = view === 'editor' ? 'automatizaciones' : view;
+  $$('.nav a').forEach(a => a.classList.toggle('on', a.dataset.view === navKey));
+  $('#crumb').innerHTML = view === 'editor'
+    ? `<a data-view="automatizaciones" style="cursor:pointer">Automatizaciones</a>${ic('chevr')}<b>Resumen semanal de ventas</b>`
+    : `<b>${TITLES[view]}</b>`;
+  history.replaceState(null, '', '#' + view);
+}
+
+/* ---------- Toast ---------- */
+let tt;
+function toast(msg){
+  $('#toast-t').textContent = msg;
+  $('#toast').classList.add('on');
+  clearTimeout(tt); tt = setTimeout(() => $('#toast').classList.remove('on'), 2800);
+}
+
+/* ---------- Drawer de conexión ---------- */
+let drawerApp = null;
+function openDrawer(id){
+  const x = INTS.find(i => i.id === id); if (!x) return;
+  drawerApp = x;
+  const t = $('#dr-tile'); t.className = 'app xl ' + x.id; t.textContent = L[x.id];
+  $('#dr-name').textContent = x.n;
+  $('#dr-cat').textContent = x.catL;
+  $('#dr-desc').textContent = `Telar va a poder usar ${x.n} en tus automatizaciones: ${x.d.charAt(0).toLowerCase() + x.d.slice(1)}`;
+  $('#dr-handle').textContent = x.h; $('#dr-handle2').textContent = x.h;
+  $('#dr-scope').textContent = x.scope;
+  $('#dr-provider').textContent = x.prov;
+  $('#dr-go').textContent = x.st === 'attn' ? `Reconectar con ${x.prov}` : `Conectar con ${x.prov}`;
+  $('#dr-go').disabled = false;
+  $('#drawer').classList.add('on'); $('#scrim').classList.add('on');
+  $('#drawer').setAttribute('aria-hidden', 'false');
+}
+function closeDrawer(){
+  $('#drawer').classList.remove('on'); $('#scrim').classList.remove('on');
+  $('#drawer').setAttribute('aria-hidden', 'true');
+}
+
+/* ---------- Composer ---------- */
+const ctext = $('#ctext');
+function caretToEnd(){
+  ctext.focus();
+  const r = document.createRange(); r.selectNodeContents(ctext); r.collapse(false);
+  const s = getSelection(); s.removeAllRanges(); s.addRange(r);
+}
+function insertMention(app, l, label){
+  if (ctext.lastChild && ctext.lastChild.nodeType === 3) ctext.lastChild.textContent = ctext.lastChild.textContent.replace(/@\S*$/, '');
+  ctext.insertAdjacentHTML('beforeend', `<span class="mention" contenteditable="false"><span class="app ${app}">${l}</span>${label}</span>&nbsp;`);
+  $('#mentions').hidden = true;
+  caretToEnd();
+}
+ctext.addEventListener('input', () => {
+  const txt = ctext.textContent;
+  $('#mentions').hidden = !/@\S*$/.test(txt);
+});
+ctext.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && !e.shiftKey){ e.preventDefault(); $('#send').click(); }
+  if (e.key === 'Escape') $('#mentions').hidden = true;
+});
+$('#btn-at').addEventListener('click', () => { $('#mentions').hidden = !$('#mentions').hidden; });
+$('#send').addEventListener('click', () => {
+  if (!ctext.textContent.trim()){ ctext.focus(); return; }
+  const c = $('#composer'); c.classList.add('working');
+  setTimeout(() => {
+    c.classList.remove('working');
+    qi = 0; QS.forEach(q => q.sel = 0); $('#clar').classList.remove('done'); renderClar();
+    go('editor');
+    toast('Borrador listo: revisalo antes de activarlo');
+  }, 1900);
+});
+
+/* ---------- Clicks globales ---------- */
+document.addEventListener('click', e => {
+  const tg = e.target.closest('.toggle');
+  if (tg){
+    if (!tg.classList.contains('locked') && tg.id !== 'ed-toggle') tg.classList.toggle('on');
+    if (tg.id === 'ed-toggle') setActive(!tg.classList.contains('on'));
+    return;
+  }
+  const cn = e.target.closest('[data-connect]'); if (cn){ openDrawer(cn.dataset.connect); return; }
+  if (e.target.closest('[data-close]') || e.target.id === 'scrim'){ closeDrawer(); return; }
+
+  const mi = e.target.closest('.mitem'); if (mi){ insertMention(mi.dataset.app, mi.dataset.l, mi.dataset.label); return; }
+  if (!e.target.closest('#composer')) $('#mentions').hidden = true;
+
+  const rc = e.target.closest('[data-recipe]');
+  if (rc){
+    const r = RECIPES[+rc.dataset.recipe];
+    go('inicio'); ctext.innerHTML = r.html.replace(/<\/?b>/g, ''); caretToEnd(); return;
+  }
+  const it = e.target.closest('[data-intent]'); if (it){ ctext.textContent = it.dataset.intent; caretToEnd(); return; }
+
+  const eb = e.target.closest('[data-estado-btn]');
+  if (eb){
+    document.body.dataset.estado = eb.dataset.estadoBtn;
+    $$('[data-estado-btn]').forEach(b => b.classList.toggle('on', b === eb));
+    go('inicio'); return;
+  }
+
+  const tb = e.target.closest('[data-tab]');
+  if (tb){
+    const g = tb.closest('[data-tabgroup]'), name = g.dataset.tabgroup;
+    $$('[data-tab]', g).forEach(x => x.classList.toggle('on', x === tb));
+    $$(`[data-pane^="${name}:"]`).forEach(p => p.hidden = p.dataset.pane !== `${name}:${tb.dataset.tab}`);
+    return;
+  }
+  const tgo = e.target.closest('[data-tab-go]');
+  if (tgo){ const [g, t] = tgo.dataset.tabGo.split(':'); $(`[data-tabgroup="${g}"] [data-tab="${t}"]`).click(); return; }
+
+  const op = e.target.closest('[data-opt]'); if (op){ QS[qi].sel = +op.dataset.opt; renderClar(); return; }
+  const cl = e.target.closest('[data-clar]'); if (cl){ qi++; renderClar(); return; }
+
+  const nd = e.target.closest('#eflow .node');
+  if (nd){ $$('#eflow .node').forEach(n => n.classList.toggle('sel', n === nd)); return; }
+
+  const v = e.target.closest('[data-view]');
+  if (v){
+    e.preventDefault(); go(v.dataset.view);
+    if (v.hasAttribute('data-focus-composer')) setTimeout(caretToEnd, 30);
+  }
+});
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeDrawer();
+  // Atajos 1–4 y Enter para la pregunta aclaratoria (como Sidekick)
+  const typing = e.target.closest && e.target.closest('input, [contenteditable="true"]');
+  if (!typing && $('#v-editor').classList.contains('on') && qi < QS.length){
+    if (['1','2','3','4'].includes(e.key)){ QS[qi].sel = +e.key - 1; renderClar(); }
+    if (e.key === 'Enter'){ qi++; renderClar(); }
+  }
+  if (!typing && (e.key === 'n' || e.key === 'N') && !e.ctrlKey && !e.metaKey){ go('inicio'); setTimeout(caretToEnd, 30); }
+});
+
+/* ---------- Integraciones: filtros ---------- */
+$('#itabs').addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  iFilter = b.dataset.f; $$('#itabs button').forEach(x => x.classList.toggle('on', x === b)); renderInts();
+});
+$('#cats').addEventListener('click', e => {
+  const a = e.target.closest('a'); if (!a) return;
+  iCat = a.dataset.c; $$('#cats a').forEach(x => x.classList.toggle('on', x === a)); renderInts();
+});
+$('#isearch').addEventListener('input', e => { iQuery = e.target.value.trim().toLowerCase(); renderInts(); });
+$('#dr-go').addEventListener('click', () => {
+  const b = $('#dr-go'); b.textContent = 'Conectando…'; b.disabled = true;
+  setTimeout(() => {
+    const x = drawerApp;
+    x.st = 'ok'; x.meta = 'Recién conectada · usada en 0 automatizaciones';
+    renderInts(); closeDrawer();
+    toast(`${x.n} conectada · la podés mencionar con ${x.h}`);
+  }, 1100);
+});
+
+/* ---------- Editor: probar y activar ---------- */
+function setActive(on){
+  $('#ed-toggle').classList.toggle('on', on);
+  $('#ed-toggle-lbl').textContent = on ? 'Activa' : 'Pausada';
+  $('#ed-toggle-lbl').style.color = on ? 'var(--ok)' : '';
+}
+$('#btn-test').addEventListener('click', () => {
+  const flow = $('#eflow'); flow.classList.add('running');
+  const order = $$('#eflow .node');
+  const pub = $('#node-publish .nfoot');
+  $$('.nstate', flow).forEach(s => s.innerHTML = '');
+  pub.classList.remove('warn'); pub.innerHTML = `${ic('usercheck')}Espera tu aprobación antes de publicar`;
+  order.forEach((n, i) => setTimeout(() => {
+    if (i === order.length - 1){
+      pub.classList.add('warn');
+      pub.innerHTML = `${ic('clock')}Esperando tu aprobación · <a data-view="actividad" style="text-decoration:underline;cursor:pointer">Revisar</a>`;
+      flow.classList.remove('running');
+      toast('Prueba completa: 5 de 6 pasos OK, el último espera tu aprobación');
+    } else {
+      $('.nstate', n).innerHTML = `<span class="badge ok">${ic('check')}OK</span>`;
+    }
+  }, 450 * (i + 1)));
+});
+$('#btn-activate').addEventListener('click', () => {
+  setActive(true);
+  $('#ed-status').className = 'badge ok'; $('#ed-status').textContent = 'Activa';
+  toast('Automatización activada · próxima ejecución: lunes 9:00');
+});
+
+/* ---------- Trama en conectores ---------- */
+const TRAMA = h => `<svg class="trama" viewBox="0 0 24 ${h}" width="24" height="${h}" aria-hidden="true"><path class="h1" d="M12 0C3 ${h*.25} 21 ${h*.75} 12 ${h}"/><path class="h2" d="M12 0C21 ${h*.25} 3 ${h*.75} 12 ${h}"/><path class="h3" d="M12 0V${h}"/></svg>`;
+$$('[data-trama]').forEach(el => el.insertAdjacentHTML('afterbegin', TRAMA(+el.dataset.trama || 40)));
+
+renderHome(); renderInts(); renderClar();
+go(location.hash.slice(1) || 'inicio');
+
+// Links de revisión: ?estado=nuevo muestra la cuenta nueva, ?conectar=docs abre el drawer
+const qp = new URLSearchParams(location.search);
+if (qp.get('estado') === 'nuevo'){
+  document.body.dataset.estado = 'nuevo';
+  $$('[data-estado-btn]').forEach(b => b.classList.toggle('on', b.dataset.estadoBtn === 'nuevo'));
+}
+if (qp.get('conectar')) openDrawer(qp.get('conectar'));
+</script>
+</body>
+</html>

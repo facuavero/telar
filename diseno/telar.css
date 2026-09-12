@@ -1,0 +1,268 @@
+/* ==========================================================================
+   Telar: tokens y componentes base (compartidos por landing y dashboard)
+   Decisiones trazadas a referencias-diseño.md:
+   - Base hueso cálida + tinta          → Dropbox Dash, Perplexity, V7, Zapier, Fin
+   - Botón primario tinta               → Attio, Vercel, Devin, HoneyBook, Mistral
+   - Hilos (añil/carmín/ocre) por tipo  → Customer.io (color por tipo de paso), evitando el violeta IA genérico
+   - Serif + sans + mono                → Intercom Fin, Retool, Vercel
+   ========================================================================== */
+
+:root{
+  --bg:#F5F2EB;
+  --bg-2:#ECE7DC;
+  --surface:#FFFFFF;
+  --surface-2:#FBFAF6;
+
+  --ink:#1B1915;
+  --ink-2:#3E3A33;
+  --muted:#736D63;
+  --faint:#A39D92;
+  --line:#E6E1D6;
+  --line-2:#D5CEBF;
+
+  /* Hilos: tintes textiles naturales. Cada uno codifica un tipo de paso. */
+  --anil:#3447C4;        /* acciones en herramientas */
+  --anil-soft:#E9EBF9;
+  --carmin:#C4402A;      /* pasos de IA */
+  --carmin-soft:#F9E8E3;
+  --ocre:#C98F12;        /* disparadores */
+  --ocre-soft:#FAF0D6;
+
+  --ok:#2C7A4E;   --ok-soft:#E2F0E7;
+  --warn:#94650E; --warn-soft:#FBEFD2;
+  --err:#B63A2A;  --err-soft:#FBE5E0;
+
+  --r-sm:6px; --r:10px; --r-lg:14px; --r-xl:20px;
+  --shadow-1:0 1px 2px rgba(27,25,21,.06);
+  --shadow-2:0 10px 30px -12px rgba(27,25,21,.18), 0 2px 6px rgba(27,25,21,.05);
+  --shadow-3:0 30px 80px -30px rgba(27,25,21,.35), 0 4px 14px rgba(27,25,21,.06);
+
+  --font-sans:"Geist", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-serif:"Instrument Serif", "Iowan Old Style", Georgia, serif;
+  --font-mono:"Geist Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+
+  /* La firma visual: un hilo tejido con los tres tintes */
+  --hilo:repeating-linear-gradient(90deg, var(--anil) 0 16px, var(--carmin) 16px 32px, var(--ocre) 32px 48px);
+}
+
+*{box-sizing:border-box}
+html,body{margin:0}
+body{
+  font-family:var(--font-sans);
+  background:var(--bg);
+  color:var(--ink);
+  font-size:14px;
+  line-height:1.5;
+  -webkit-font-smoothing:antialiased;
+  text-rendering:optimizeLegibility;
+}
+img,svg{display:block;max-width:100%}
+button{font:inherit;color:inherit}
+::selection{background:var(--anil-soft)}
+
+/* Íconos (sprite inline, trazo tipo Lucide) */
+.i{width:16px;height:16px;flex:none;fill:none;stroke:currentColor;stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round}
+.i.sm{width:14px;height:14px}
+.i.lg{width:20px;height:20px}
+
+/* Logo */
+.logo{display:inline-flex;align-items:center;gap:9px;font:400 25px/1 var(--font-serif);letter-spacing:-.01em;color:var(--ink);text-decoration:none}
+.logo svg{width:24px;height:24px}
+
+/* ---------- Nav (compartida por todas las páginas) ---------- */
+.wrap{max-width:1160px;margin:0 auto;padding:0 24px}
+a{color:inherit;text-decoration:none}
+.top{position:sticky;top:0;z-index:30;background:rgba(245,242,235,.82);-webkit-backdrop-filter:saturate(1.4) blur(14px);backdrop-filter:saturate(1.4) blur(14px);border-bottom:1px solid transparent;transition:border-color .2s}
+.top.scrolled{border-bottom-color:var(--line)}
+.top .wrap{display:flex;align-items:center;gap:40px;height:64px}
+.top .links{display:flex;gap:26px;font-size:14px;color:var(--ink-2)}
+.top .links a{position:relative;display:inline-flex;align-items:center;gap:0;padding:4px 0;transition:color .15s}
+.top .links a:hover{color:var(--ink)}
+.top .links a[aria-current="page"]{color:var(--ink)}
+.top .links a[aria-current="page"]::before{content:"";position:absolute;left:0;right:0;bottom:-1px;height:1.5px;border-radius:2px;background:var(--ink)}
+.top .right{margin-left:auto;display:flex;align-items:center;gap:6px}
+@media (max-width:980px){ .top .links{display:none} }
+@media (max-width:600px){ .top .right .btn-ghost{display:none} }
+
+/* Íconos de hover en la nav: cada apartado "aparece" de una forma distinta */
+.nav-ic{display:inline-flex;align-items:center;justify-content:center;width:0;margin-left:0;overflow:hidden;opacity:0;flex:none}
+.nav-ic svg{width:14px;height:14px;flex:none}
+.top .links a:hover .nav-ic{width:14px;margin-left:6px;opacity:1}
+.nav-producto .nav-ic{color:var(--carmin);transform:rotate(-40deg) scale(.3);transition:width .22s ease,margin .22s ease,opacity .18s ease,transform .32s cubic-bezier(.34,1.56,.64,1)}
+.nav-producto:hover .nav-ic{transform:rotate(0) scale(1)}
+.nav-integraciones .nav-ic{color:var(--anil);transform:translateX(-10px);transition:width .22s ease,margin .22s ease,opacity .2s ease,transform .26s ease}
+.nav-integraciones:hover .nav-ic{transform:translateX(0)}
+.nav-casos .nav-ic{color:var(--ok);transform:scale(.15);transition:width .18s ease,margin .18s ease,opacity .15s ease,transform .4s cubic-bezier(.34,1.9,.64,1)}
+.nav-casos:hover .nav-ic{transform:scale(1)}
+.nav-seguridad .nav-ic{color:var(--ocre);transform:translateY(-9px);transition:width .22s ease,margin .22s ease,opacity .2s ease,transform .3s cubic-bezier(.22,1,.36,1)}
+.nav-seguridad:hover .nav-ic{transform:translateY(0)}
+.nav-precios .nav-ic{color:var(--ink-2);transform:rotate(24deg) scale(.5);transition:width .22s ease,margin .22s ease,opacity .2s ease,transform .3s cubic-bezier(.34,1.56,.64,1)}
+.nav-precios:hover .nav-ic{transform:rotate(0) scale(1)}
+@media (prefers-reduced-motion:reduce){ .nav-ic{transition:none!important} }
+
+/* ---------- Footer (compartido) ---------- */
+footer{border-top:1px solid var(--line);margin-top:120px;padding:56px 0 40px}
+/* las secciones de cierre ya traen su propio aire abajo */
+.final+footer,.final-cta+footer{margin-top:0}
+.fgrid{display:grid;grid-template-columns:1.6fr repeat(4,1fr);gap:32px}
+.fgrid .logo{display:inline-flex;align-items:center;gap:10px;font:400 25px/1 var(--font-serif);margin-bottom:2px}
+.fgrid h5{font:500 11.5px var(--font-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:0 0 14px}
+.fgrid a{display:block;font-size:14px;color:var(--ink-2);padding:4px 0}
+.fgrid a:hover{color:var(--ink)}
+.fgrid p{font-size:14px;color:var(--muted);max-width:260px;margin:14px 0 0}
+.fbottom{display:flex;justify-content:space-between;margin-top:48px;font-size:13px;color:var(--muted)}
+@media (max-width:980px){ .fgrid{grid-template-columns:1fr 1fr} }
+
+/* ---------- Cabecera simple para sub-páginas ---------- */
+.subhero{padding:72px 0 56px;text-align:center}
+.subhero h1{font:400 clamp(40px,6vw,68px)/1.02 var(--font-serif);letter-spacing:-.022em;margin:0}
+.subhero h1 span{color:var(--muted)}
+.subhero p{max-width:580px;margin:20px auto 0;font-size:17px;line-height:1.55;color:var(--ink-2)}
+section.s{padding:96px 0 0}
+.sec-head{display:grid;grid-template-columns:1.15fr .85fr;gap:48px;align-items:end;margin-bottom:44px}
+h2.title{font:400 clamp(36px,4.6vw,56px)/1 var(--font-serif);letter-spacing:-.022em;margin:0}
+h2.title span{color:var(--muted)}
+.sec-head p{font-size:16.5px;color:var(--ink-2);margin:0;max-width:440px;line-height:1.55}
+.link-arrow{display:inline-flex;align-items:center;gap:10px;font-weight:500;font-size:14.5px}
+.link-arrow .c{width:26px;height:26px;border-radius:50%;background:var(--ink);color:#fff;display:grid;place-items:center;transition:transform .2s}
+.link-arrow:hover .c{transform:translateX(3px)}
+@media (max-width:980px){ .sec-head{grid-template-columns:1fr;gap:18px} }
+
+/* Botones */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:34px;padding:0 14px;border-radius:9px;font:500 13.5px/1 var(--font-sans);border:1px solid transparent;cursor:pointer;text-decoration:none;white-space:nowrap;transition:background .15s,border-color .15s,box-shadow .15s,transform .05s}
+.btn:active{transform:translateY(1px)}
+.btn:focus-visible,.toggle:focus-visible,.chip:focus-visible{outline:2px solid var(--anil);outline-offset:2px}
+.btn-ink{background:var(--ink);color:#FBFAF6}
+.btn-ink:hover{background:#000}
+.btn-outline{background:var(--surface);color:var(--ink);border-color:var(--line-2)}
+.btn-outline:hover{border-color:var(--ink-2)}
+.btn-ghost{background:transparent;color:var(--ink-2)}
+.btn-ghost:hover{background:rgba(27,25,21,.05)}
+.btn-lg{height:46px;padding:0 20px;font-size:15px;border-radius:12px}
+.btn-sm{height:28px;padding:0 10px;font-size:12.5px;border-radius:7px}
+.btn-full{width:100%}
+
+/* Tipografía utilitaria */
+.eyebrow{font:500 11.5px/1 var(--font-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.mono{font-family:var(--font-mono)}
+
+/* Pills, badges, chips */
+.pill{display:inline-flex;align-items:center;gap:6px;height:24px;padding:0 10px;border-radius:99px;font-size:12px;font-weight:500;border:1px solid var(--line);background:var(--surface);color:var(--ink-2)}
+.badge{display:inline-flex;align-items:center;gap:5px;height:21px;padding:0 7px;border-radius:6px;font-size:11.5px;font-weight:500;white-space:nowrap;line-height:1}
+.badge .i{width:12px;height:12px}
+.badge.ok{background:var(--ok-soft);color:var(--ok)}
+.badge.warn{background:var(--warn-soft);color:var(--warn)}
+.badge.err{background:var(--err-soft);color:var(--err)}
+.badge.anil{background:var(--anil-soft);color:var(--anil)}
+.badge.neutral{background:var(--bg-2);color:var(--ink-2)}
+.dot{width:6px;height:6px;border-radius:50%;background:currentColor;flex:none}
+.chip{display:inline-flex;align-items:center;gap:7px;height:32px;padding:0 13px;border-radius:99px;border:1px solid var(--line);background:var(--surface);font-size:13px;color:var(--ink-2);cursor:pointer;transition:border-color .15s,color .15s,background .15s}
+.chip:hover{border-color:var(--line-2);color:var(--ink)}
+.kbd{display:inline-flex;align-items:center;font:500 11px/1 var(--font-mono);padding:3px 5px;border-radius:5px;border:1px solid var(--line);background:var(--surface-2);color:var(--muted)}
+
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg)}
+
+/* Tiles de herramientas (placeholder: inicial + color de marca, no logos oficiales) */
+.app{--s:28px;width:var(--s);height:var(--s);flex:none;border-radius:calc(var(--s) * .27);display:grid;place-items:center;color:#fff;font:600 calc(var(--s) * .44)/1 var(--font-sans);letter-spacing:-.03em;box-shadow:inset 0 0 0 1px rgba(0,0,0,.07)}
+.app.xs{--s:16px;font-size:8.5px}
+.app.sm{--s:20px}
+.app.lg{--s:36px}
+.app.xl{--s:44px}
+.app.slack{background:#4A154B}
+.app.gmail{background:#D93025}
+.app.docs{background:#2F6FDE}
+.app.sheets{background:#1E8E3E}
+.app.notion{background:#1B1915}
+.app.drive{background:#F2B51C;color:#1B1915}
+.app.calendar{background:#1A73E8}
+.app.hubspot{background:#F06A40}
+.app.trello{background:#0C66E4}
+.app.jira{background:#1868DB}
+.app.airtable{background:#FCB400;color:#1B1915}
+.app.webhook{background:#3E3A33;font-family:var(--font-mono)}
+.app.ai{background:var(--carmin)}
+.app.clock{background:var(--ocre)}
+.app.logic{background:var(--ink-2)}
+.stack{display:flex;align-items:center}
+.stack .app{box-shadow:0 0 0 2px var(--surface)}
+.stack .app + .app{margin-left:-5px}
+
+/* Logos de marca e íconos de paso (sprite compartido; el ícono lleva su propio color) */
+.brand{width:28px;height:28px;flex:none;display:block}
+.brand.xs{width:16px;height:16px}
+.brand.sm{width:20px;height:20px}
+.brand.lg{width:36px;height:36px}
+.step-i{width:28px;height:28px;flex:none;display:block}
+.step-i.sm{width:20px;height:20px}
+.s-trigger{color:var(--ocre)}
+.s-ai{color:var(--carmin)}
+.s-logic{color:var(--ink-2)}
+
+/* Mención inline de una herramienta dentro de un pedido (ref: V7 Go, Mistral) */
+.mention{display:inline-flex;align-items:center;gap:.28em;padding:.06em .36em;margin:0 .05em;border-radius:.32em;background:var(--anil-soft);color:var(--anil);font-size:.8em;font-weight:500;line-height:1.3;white-space:nowrap;vertical-align:baseline}
+.mention .app{--s:1.05em;font-size:.55em;border-radius:.28em}
+.mention .brand{width:.95em;height:.95em}
+
+/* Toggle (ref: Canny, Supabase, Plain) */
+.toggle{position:relative;width:32px;height:19px;flex:none;border-radius:99px;border:0;background:var(--line-2);cursor:pointer;transition:background .18s;padding:0}
+.toggle::after{content:"";position:absolute;top:2.5px;left:2.5px;width:14px;height:14px;border-radius:50%;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.22);transition:transform .18s}
+.toggle.on{background:var(--ok)}
+.toggle.on::after{transform:translateX(13px)}
+.toggle.locked{opacity:.55;cursor:not-allowed}
+
+/* Borde de hilo tejido animado = "Telar está trabajando" (reemplaza el degradé IA de Zapier/Airtable) */
+.hilo{padding:1.5px;border-radius:var(--r-lg);background:var(--hilo);background-size:48px 100%;animation:tejer 1.4s linear infinite}
+.hilo > .hilo-in{border-radius:calc(var(--r-lg) - 1.5px);background:var(--surface)}
+@keyframes tejer{to{background-position:48px 0}}
+
+/* Nodo de flujo (ref: HoneyBook vertical + Customer.io borde por tipo) */
+.node{position:relative;display:flex;flex-direction:column;background:var(--surface);border:1px solid var(--line);border-left:3px solid var(--c, var(--line-2));border-radius:11px;box-shadow:var(--shadow-1);transition:box-shadow .15s,border-color .15s}
+.node.t-trigger{--c:var(--ocre)}
+.node.t-action{--c:var(--anil)}
+.node.t-ai{--c:var(--carmin)}
+.node.t-logic{--c:var(--ink-2)}
+.node .nmain{display:flex;align-items:center;gap:11px;padding:10px 12px}
+.node .ntxt{min-width:0;flex:1}
+.node .ntype{font:500 10px/1 var(--font-mono);text-transform:uppercase;letter-spacing:.08em;color:var(--c)}
+.node .ntitle{font-weight:560;font-size:13.5px;margin-top:4px;line-height:1.3}
+.node .nsub{font-size:12px;color:var(--muted);margin-top:1px}
+.node .nfoot{display:flex;align-items:center;gap:6px;padding:7px 12px;border-top:1px solid var(--line);font-size:12px;color:var(--muted)}
+.node .nfoot.warn{background:var(--warn-soft);color:var(--warn);border-top-color:#EFD9A6;border-radius:0 0 10px 0}
+
+/* Conector "trama": tres hilos trenzados */
+.trama path{fill:none;stroke-width:1.6;stroke-linecap:round}
+.trama .h1{stroke:var(--anil)}
+.trama .h2{stroke:var(--carmin)}
+.trama .h3{stroke:var(--ocre);stroke-dasharray:3 4}
+.running .trama .h3, .trama.live .h3{animation:fluir .9s linear infinite}
+@keyframes fluir{to{stroke-dashoffset:-14}}
+
+@keyframes aparecer{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation:none!important;transition:none!important}
+}
+
+/* Palabra de marca: Telar dentro de texto/títulos */
+.telar{font-family:var(--font-serif);font-style:normal;color:var(--ink);letter-spacing:-.01em;position:relative;white-space:nowrap}
+.telar::after{content:"";position:absolute;left:0;right:0;bottom:-.02em;height:.055em;border-radius:1em;background:linear-gradient(90deg,var(--anil) 0 33.34%,var(--carmin) 0 66.67%,var(--ocre) 0);opacity:.6}
+.dark-sec .telar,.hero-dark .telar{color:#F5F0E6}
+.dark-sec .telar::after,.hero-dark .telar::after{opacity:.8}
+@media (prefers-reduced-motion:no-preference){.telar::after{transition:opacity .2s}}
+
+/* Selector de idioma */
+.lang{position:relative}
+.lang-btn{display:inline-flex;align-items:center;gap:6px;height:34px;padding:0 10px;border:1px solid var(--line-2);border-radius:10px;background:transparent;color:var(--ink-2);font:500 13px var(--font-sans);cursor:pointer;transition:color .15s,border-color .15s,background .15s}
+.lang-btn:hover{color:var(--ink);border-color:var(--ink-2);background:var(--surface)}
+.lang-btn svg{width:15px;height:15px;flex:none;fill:none;stroke:currentColor;stroke-width:1.7}
+.lang-btn .chev{width:9px;height:9px;stroke-width:2.2;opacity:.6;transition:transform .2s}
+.lang[data-open] .lang-btn{color:var(--ink);border-color:var(--ink-2);background:var(--surface)}
+.lang[data-open] .chev{transform:rotate(180deg)}
+.lang-menu{position:absolute;top:calc(100% + 6px);right:0;min-width:132px;padding:5px;background:var(--surface);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow-3);display:none;z-index:60}
+.lang[data-open] .lang-menu{display:block}
+.lang-menu button{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;padding:7px 9px;border:0;border-radius:8px;background:transparent;color:var(--ink-2);font:400 13.5px var(--font-sans);text-align:left;cursor:pointer}
+.lang-menu button:hover{background:var(--bg);color:var(--ink)}
+.lang-menu button[aria-current="true"]{color:var(--ink);font-weight:560}
+.lang-menu button[aria-current="true"]::after{content:"";width:6px;height:6px;border-radius:50%;background:var(--anil);flex:none}
+.lang-menu .code{font:500 11px var(--font-mono);letter-spacing:.06em;color:var(--muted)}
+@media (max-width:600px){ .lang-btn .label{display:none} }
