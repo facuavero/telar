@@ -97,7 +97,11 @@ exception when insufficient_privilege then
 end $$;
 
 -- 5) control: tiene que devolver 6 filas con al menos una policy cada una
-select tablename, count(*) as policies
-from pg_policies where schemaname = 'public'
-  and tablename in ('perfiles','workspaces','miembros','conexiones','automatizaciones','ejecuciones')
-group by tablename order by tablename;
+select c.relname as tabla, c.relrowsecurity as rls, count(p.polname) as policies
+from pg_class c
+join pg_namespace n on n.oid = c.relnamespace
+left join pg_policy p on p.polrelid = c.oid
+where n.nspname = 'public'
+  and c.relname in ('perfiles','workspaces','miembros','conexiones','automatizaciones','ejecuciones')
+group by c.relname, c.relrowsecurity
+order by c.relname;
