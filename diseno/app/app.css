@@ -434,6 +434,7 @@
     border-top:1px dashed var(--line);display:flex;flex-direction:column;gap:10px}
   .pasos-corrida li{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:start;padding-top:10px}
   .pasos-corrida .punto{margin-top:6px}
+  .acciones-corrida{padding:0 16px 14px 34px;background:var(--surface-2)}
   .paso-txt{min-width:0}
   .paso-txt b{display:block;font-weight:560;font-size:13px}
   .paso-txt small{display:block;font-size:12px;color:var(--muted)}

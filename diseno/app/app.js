@@ -56,7 +56,7 @@
         <span class="badge ${e.estado === 'ok' ? 'ok' : e.estado === 'error' ? 'err' : ''}">${e.estado}</span>
         <small class="cuando">${fecha(e.empezada_en)}</small>
       </div>
-      <ol class="pasos-corrida" id="d-${e.id}" hidden>${pasos.length
+      <div class="detalle-corrida" id="d-${e.id}" hidden><ol class="pasos-corrida">${pasos.length
         ? pasos.map(p => `<li>
             <span class="punto ${PINTA_PASO[p.estado] || ''}"></span>
             <div class="paso-txt">
@@ -67,6 +67,8 @@
             <span class="badge ${p.estado === 'ok' ? 'ok' : p.estado === 'error' ? 'err' : ''}">${p.estado}</span>
           </li>`).join('')
         : '<li class="vacio chico">La corrida no llegó a ningún paso.</li>'}</ol>
+        ${e.estado === 'esperando_aprobacion' ? `<div class="acciones-corrida"><button class="btn btn-sm btn-primary" data-aprobar="${e.id}">Aprobar y continuar</button></div>` : ''}
+      </div>
     </div>`;
   }
 
@@ -135,7 +137,7 @@
           ? (c.estado === 'activa' ? 'Conectada · ' + esc(c.cuenta || 'sin cuenta') : 'Conectada · ' + c.estado)
           : (app.id === 'gmail' ? 'Sin conectar · con OAuth' : 'Sin conectar')}</small></div>
         ${c
-          ? `<button class="btn btn-sm btn-ghost" data-desconectar="${c.id}">Quitar</button>`
+          ? `${app.id === 'gmail' ? `<button class="btn btn-sm btn-outline" data-conectar="gmail">Reconectar</button>` : ''}<button class="btn btn-sm btn-ghost" data-desconectar="${c.id}">Quitar</button>`
           : `<button class="btn btn-sm btn-outline" data-conectar="${app.id}">Conectar</button>`}
       </div>`;
     }).join('');
@@ -187,8 +189,8 @@
       return;
     }
     if (tipo === 'email') {
-      caja.innerHTML = `<small class="fine-mini">El disparador por mail entrante todavía no está.
-        Gmail hoy sirve para mandar, no para escuchar.</small>`;
+      caja.innerHTML = `<small class="fine-mini">Revisa Gmail cada 5 minutos y corre por cada mensaje nuevo de la bandeja de entrada.
+        La información del correo queda en <code>{{disparador.entrada}}</code>. Reconectá Gmail si lo habías conectado antes.</small>`;
       return;
     }
     caja.innerHTML = `<small class="fine-mini">La corrés vos con el botón “Probar”.</small>`;
@@ -300,9 +302,13 @@
     const ruta = location.hash.slice(1);
     const [vista, query] = ruta.split('?');
     if (query) {
-      const gmail = new URLSearchParams(query).get('gmail');
+      const params = new URLSearchParams(query);
+      const gmail = params.get('gmail');
       if (gmail === 'ok') aviso('Gmail quedó conectado.');
       else if (gmail) aviso('Google no completó la conexión: ' + gmail);
+      const slack = params.get('slack');
+      if (slack === 'ok') aviso('Slack quedó conectado.');
+      else if (slack) aviso('Slack no completó la conexión: ' + slack);
     }
     if (vista.startsWith('editor/')) abrirEditor(vista.split('/')[1]).catch(() => ir('inicio'));
     else ir(['automatizaciones', 'integraciones', 'actividad'].includes(vista) ? vista : 'inicio');
@@ -350,6 +356,12 @@
         catch (e) { conectar.textContent = 'Conectar'; aviso(explicar(e)); }
         return;
       }
+      if (app.id === 'slack') {
+        conectar.textContent = 'Abriendo Slack…';
+        try { location.href = await datos.conectarSlack(est.ws.id); }
+        catch (e) { conectar.textContent = 'Conectar'; aviso(explicar(e)); }
+        return;
+      }
       try { await datos.conectar(est.ws.id, app.id, app.nombre); await recargar(); }
       catch (e) { aviso(explicar(e)); }
       return;
@@ -360,6 +372,21 @@
     if (detalle) {
       const caja = $('#d-' + detalle.dataset.detalle);
       if (caja) caja.hidden = !caja.hidden;
+      return;
+    }
+
+    const aprobar = t.closest('[data-aprobar]');
+    if (aprobar) {
+      aprobar.disabled = true;
+      aprobar.textContent = 'Continuando…';
+      try {
+        await datos.aprobar(aprobar.dataset.aprobar);
+        await recargar();
+      } catch (e) {
+        aprobar.disabled = false;
+        aprobar.textContent = 'Aprobar y continuar';
+        aviso(explicar(e));
+      }
       return;
     }
 

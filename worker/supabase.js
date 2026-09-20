@@ -70,3 +70,8 @@ export async function workspaceDelUsuario(env, token, ws) {
   const filas = await db.leerComoUsuario(env, token, 'workspaces', `id=eq.${encodeURIComponent(ws)}&select=id,nombre&limit=1`);
   return filas?.[0] || null;
 }
+
+export async function ejecucionDelUsuario(env, token, id) {
+  const filas = await db.leerComoUsuario(env, token, 'ejecuciones', `id=eq.${encodeURIComponent(id)}&select=*&limit=1`);
+  return filas?.[0] || null;
+}

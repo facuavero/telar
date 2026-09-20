@@ -8,9 +8,8 @@ import { db } from './supabase.js';
 const AUTORIZAR = 'https://accounts.google.com/o/oauth2/v2/auth';
 const TOKEN = 'https://oauth2.googleapis.com/token';
 const ENVIAR = 'https://gmail.googleapis.com/gmail/v1/users/me/messages/send';
-// Mínimo indispensable: mandar mails y saber de qué cuenta se trata.
-// Para disparadores por mail entrante hay que sumar gmail.readonly y volver a autorizar.
-export const ALCANCES = 'openid email https://www.googleapis.com/auth/gmail.send';
+const API = 'https://gmail.googleapis.com/gmail/v1/users/me';
+export const ALCANCES = 'openid email https://www.googleapis.com/auth/gmail.send https://www.googleapis.com/auth/gmail.readonly';
 
 export function urlDeAutorizacion(env, { redirect, state }) {
   const p = new URLSearchParams({
@@ -64,11 +63,13 @@ export function mailDelIdToken(idToken) {
 // Deja la conexión lista y visible en la app.
 export async function guardarConexion(env, { ws, cuenta, refreshToken }) {
   const sobre = await cifrar(env.CLAVE_CIFRADO, refreshToken);
+  const token = await refrescar(env, refreshToken);
+  const perfil = await pedirGmail(API + '/profile', token.access_token);
   const campos = {
     estado: 'activa',
     cuenta,
     nombre: 'Gmail',
-    config: { oauth: sobre, alcances: ALCANCES, conectada_en: new Date().toISOString() }
+    config: { oauth: sobre, alcances: ALCANCES, history_id: perfil.historyId, conectada_en: new Date().toISOString() }
   };
   const previas = await db.leer(env, 'conexiones',
     `workspace_id=eq.${ws}&proveedor=eq.gmail&select=id&limit=1`);
@@ -94,6 +95,79 @@ async function accessToken(env, conexion) {
     await db.actualizar(env, 'conexiones', `id=eq.${conexion.id}`, { estado: 'error' });
     throw new Error('Google no renovó el permiso de Gmail (' + e.message + '). Hay que conectarla de nuevo.');
   }
+}
+
+async function pedirGmail(url, token) {
+  const r = await fetch(url, { headers: { authorization: 'Bearer ' + token } });
+  const datos = await r.json().catch(() => null);
+  if (!r.ok) throw new Error('Gmail respondió: ' + (datos?.error?.message || r.status));
+  return datos;
+}
+
+const cabecera = (mensaje, nombre) =>
+  mensaje?.payload?.headers?.find(h => h.name.toLowerCase() === nombre.toLowerCase())?.value || null;
+
+// Gmail no puede llamar al worker sin Pub/Sub. El cron trae los cambios desde
+// el último historyId y luego adelanta el cursor dentro de conexiones.config.
+export async function correosNuevos(env, conexion) {
+  const token = await accessToken(env, conexion);
+  let historyId = conexion.config?.history_id;
+  if (!historyId) {
+    const perfil = await pedirGmail(API + '/profile', token);
+    await db.actualizar(env, 'conexiones', `id=eq.${conexion.id}`, {
+      config: { ...conexion.config, history_id: perfil.historyId }
+    });
+    return [];
+  }
+
+  const encontrados = [];
+  let pagina = null;
+  let ultimoHistory = historyId;
+  do {
+    const qs = new URLSearchParams({ startHistoryId: historyId, historyTypes: 'messageAdded', maxResults: '100' });
+    if (pagina) qs.set('pageToken', pagina);
+    let datos;
+    try {
+      datos = await pedirGmail(API + '/history?' + qs, token);
+    } catch (e) {
+      if (/historyId|too old|404/i.test(e.message)) {
+        const perfil = await pedirGmail(API + '/profile', token);
+        await db.actualizar(env, 'conexiones', `id=eq.${conexion.id}`, {
+          config: { ...conexion.config, history_id: perfil.historyId }
+        });
+        return [];
+      }
+      throw e;
+    }
+    ultimoHistory = datos.historyId || ultimoHistory;
+    for (const cambio of datos.history || []) {
+      for (const agregado of cambio.messagesAdded || []) {
+        const id = agregado.message?.id;
+        if (id && !encontrados.includes(id)) encontrados.push(id);
+      }
+    }
+    pagina = datos.nextPageToken || null;
+  } while (pagina);
+
+  const correos = [];
+  for (const id of encontrados.slice(-50)) {
+    const m = await pedirGmail(API + `/messages/${encodeURIComponent(id)}?format=metadata&metadataHeaders=From&metadataHeaders=To&metadataHeaders=Subject&metadataHeaders=Date`, token);
+    if (!m.labelIds?.includes('INBOX')) continue;
+    correos.push({
+      id: m.id,
+      hilo_id: m.threadId,
+      de: cabecera(m, 'From'),
+      para: cabecera(m, 'To'),
+      asunto: cabecera(m, 'Subject') || '(sin asunto)',
+      fecha: cabecera(m, 'Date'),
+      resumen: m.snippet || ''
+    });
+  }
+
+  await db.actualizar(env, 'conexiones', `id=eq.${conexion.id}`, {
+    config: { ...conexion.config, history_id: ultimoHistory, ultimo_poll_en: new Date().toISOString() }
+  });
+  return correos;
 }
 
 // RFC 2822 en base64url, como pide la API.

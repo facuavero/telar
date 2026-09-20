@@ -2,11 +2,12 @@
 // la API del motor en /api/*. Las claves (service role, IA, Google) viven acá
 // como secrets: nunca salen al front.
 
-import { db, automatizacionDelUsuario, workspaceDelUsuario } from './supabase.js';
-import { ejecutar } from './motor.js';
+import { db, automatizacionDelUsuario, workspaceDelUsuario, ejecucionDelUsuario } from './supabase.js';
+import { ejecutar, reanudar } from './motor.js';
 import { toca, proxima } from './programado.js';
 import { sellar, abrirSello, firmar, firmaValida } from './cripto.js';
 import * as gmail from './gmail.js';
+import * as slack from './slack.js';
 
 const json = (datos, estado = 200) =>
   new Response(JSON.stringify(datos), { status: estado, headers: { 'content-type': 'application/json; charset=utf-8' } });
@@ -38,7 +39,10 @@ export default {
 
   // Disparador programado: se fija qué automatización activa le toca correr.
   async scheduled(evento, env, ctx) {
-    ctx.waitUntil(correrProgramadas(env, new Date(evento.scheduledTime)));
+    ctx.waitUntil(Promise.all([
+      correrProgramadas(env, new Date(evento.scheduledTime)),
+      correrCorreos(env)
+    ]));
   }
 };
 
@@ -51,6 +55,7 @@ async function rutear(req, env, url, ctx) {
       motor: 'listo',
       ia: !!env.CLAVE_GEMINI,
       gmail: !!(env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET && env.CLAVE_CIFRADO),
+      slack: !!(env.SLACK_CLIENT_ID && env.SLACK_CLIENT_SECRET && env.CLAVE_CIFRADO),
       base: !!env.SUPABASE_SERVICE_ROLE
     });
   }
@@ -71,6 +76,18 @@ async function rutear(req, env, url, ctx) {
       entrada: cuerpo.entrada ?? null
     });
     return json({ ejecucion: fila });
+  }
+
+  const aprobacion = ruta.match(/^\/api\/ejecuciones\/([0-9a-f-]{36})\/aprobar$/i);
+  if (aprobacion && req.method === 'POST') {
+    const token = tokenDe(req);
+    if (!token) return problema('Falta la sesión.', 401);
+    const ejecucion = await ejecucionDelUsuario(env, token, aprobacion[1]);
+    if (!ejecucion) return problema('Esa ejecución no existe o no es tuya.', 403);
+    if (ejecucion.estado !== 'esperando_aprobacion') return problema('Esta ejecución ya no espera aprobación.', 409);
+    const autom = await automatizacionDelUsuario(env, token, ejecucion.automatizacion_id);
+    if (!autom) return problema('La automatización ya no existe o no es tuya.', 403);
+    return json({ ejecucion: await reanudar(env, autom, ejecucion) });
   }
 
   // --- datos del disparador (URL del webhook, próxima corrida) ---
@@ -148,6 +165,37 @@ async function rutear(req, env, url, ctx) {
     }
   }
 
+  // --- OAuth de Slack ---
+  if (ruta === '/api/oauth/slack/iniciar' && req.method === 'POST') {
+    if (!env.SLACK_CLIENT_ID || !env.SLACK_CLIENT_SECRET) return problema('Falta configurar las credenciales de Slack en el worker.', 501);
+    if (!env.CLAVE_CIFRADO) return problema('Falta el secreto CLAVE_CIFRADO en el worker.', 501);
+    const token = tokenDe(req);
+    if (!token) return problema('Falta la sesión.', 401);
+    const cuerpo = await req.json().catch(() => ({}));
+    const ws = cuerpo.workspace_id && await workspaceDelUsuario(env, token, cuerpo.workspace_id);
+    if (!ws) return problema('Ese workspace no es tuyo.', 403);
+    const redirect = url.origin + '/api/oauth/slack/callback';
+    const state = await sellar(firmaSecreta(env), { ws: ws.id, volver: cuerpo.volver || '/app/index.html' });
+    return json({ url: slack.urlDeAutorizacion(env, { redirect, state }) });
+  }
+
+  if (ruta === '/api/oauth/slack/callback') {
+    const volverA = (destino, params) => Response.redirect(url.origin + destino + params, 302);
+    const error = url.searchParams.get('error');
+    if (error) return volverA('/app/index.html', '#integraciones?slack=' + encodeURIComponent(error));
+    const datos = await abrirSello(firmaSecreta(env), url.searchParams.get('state'));
+    if (!datos) return volverA('/app/index.html', '#integraciones?slack=state_invalido');
+    try {
+      const autorizacion = await slack.canjearCodigo(env, {
+        code: url.searchParams.get('code'), redirect: url.origin + '/api/oauth/slack/callback'
+      });
+      await slack.guardarConexion(env, { ws: datos.ws, autorizacion });
+      return volverA(datos.volver, '#integraciones?slack=ok');
+    } catch (e) {
+      return volverA(datos.volver, '#integraciones?slack=' + encodeURIComponent(e.message));
+    }
+  }
+
   return problema('No existe ese endpoint.', 404);
 }
 
@@ -165,6 +213,33 @@ export async function correrProgramadas(env, momento) {
     if (!turno) continue;
     const fila = await ejecutar(env, autom, { tipo: 'cron', detalle: autom.definicion?.disparador?.detalle || null, entrada: { programada_para: turno.cuando } });
     corridas.push({ automatizacion: autom.id, ejecucion: fila.id, estado: fila.estado });
+  }
+  return corridas;
+}
+
+export async function correrCorreos(env) {
+  const activas = await db.leer(env, 'automatizaciones',
+    'estado=eq.activa&definicion->disparador->>tipo=eq.email&select=*&limit=200');
+  const porWorkspace = new Map();
+  for (const autom of activas || []) {
+    const lista = porWorkspace.get(autom.workspace_id) || [];
+    lista.push(autom);
+    porWorkspace.set(autom.workspace_id, lista);
+  }
+
+  const corridas = [];
+  for (const [ws, automatizaciones] of porWorkspace) {
+    const conexion = await gmail.conexionDe(env, ws);
+    if (!conexion) continue;
+    let correos;
+    try { correos = await gmail.correosNuevos(env, conexion); }
+    catch (e) { console.error('No se pudo revisar Gmail para el workspace', ws, e); continue; }
+    for (const correo of correos) {
+      for (const autom of automatizaciones) {
+        const fila = await ejecutar(env, autom, { tipo: 'email', detalle: autom.definicion?.disparador?.detalle || null, entrada: correo });
+        corridas.push({ automatizacion: autom.id, ejecucion: fila.id, estado: fila.estado });
+      }
+    }
   }
   return corridas;
 }

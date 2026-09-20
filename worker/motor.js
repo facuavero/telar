@@ -7,6 +7,7 @@
 import { db } from './supabase.js';
 import { pedirle } from './ia.js';
 import * as gmail from './gmail.js';
+import * as slack from './slack.js';
 
 const ahora = () => new Date().toISOString();
 
@@ -87,8 +88,16 @@ function parsearMail(texto) {
 
 async function correrAccion(env, paso, ctx) {
   const texto = resolver(paso.detalle, ctx);
+  if (/^\s*slack\b/i.test(texto)) {
+    const partes = texto.split('|');
+    const canal = partes[0].replace(/^\s*slack\s*(a\s+)?/i, '').trim();
+    const mensaje = partes.slice(1).join('|').trim();
+    if (!canal || !mensaje) return { estado: 'error', salida: 'Formato de Slack: slack #canal | mensaje.' };
+    const enviado = await slack.enviar(env, ctx.workspace_id, { canal, texto: mensaje });
+    return { estado: 'ok', salida: `Mensaje enviado a ${canal} en ${enviado.cuenta}.` };
+  }
   if (!/^\s*(gmail|mail|correo)\b/i.test(texto)) {
-    return { estado: 'omitido', nota: 'Solo Gmail está conectado. Escribí el paso como: gmail a alguien@dominio.com | asunto | cuerpo.' };
+    return { estado: 'omitido', nota: 'Acciones disponibles: gmail a alguien@dominio.com | asunto | cuerpo; slack #canal | mensaje.' };
   }
   const mail = parsearMail(texto);
   if (!mail) return { estado: 'error', salida: 'No encontré a quién mandarle el mail. Formato: gmail a alguien@dominio.com | asunto | cuerpo.' };
@@ -161,7 +170,7 @@ export async function ejecutar(env, automatizacion, disparador) {
           break;
         }
         case 'aprobacion':
-          r = { estado: 'esperando', nota: resolver(paso.detalle, ctx) || 'Esperando que alguien apruebe.' };
+          r = { estado: 'esperando', nota: resolver(paso.detalle, ctx) || 'Esperando que alguien apruebe.', disparador: ctx.disparador };
           cortada = true;
           estadoFinal = 'esperando_aprobacion';
           break;
@@ -182,6 +191,83 @@ export async function ejecutar(env, automatizacion, disparador) {
   }
 
   return db.actualizar(env, 'ejecuciones', `id=eq.${fila.id}`, {
+    estado: estadoFinal,
+    error,
+    terminada_en: estadoFinal === 'esperando_aprobacion' ? null : ahora(),
+    pasos: registro
+  });
+}
+
+// Continúa una corrida desde el paso que quedó esperando. El disparador queda
+// guardado dentro del paso de aprobación para conservar sus plantillas.
+export async function reanudar(env, automatizacion, ejecucion) {
+  if (ejecucion.estado !== 'esperando_aprobacion') throw new Error('Esta ejecución no está esperando aprobación.');
+
+  const definicion = automatizacion.definicion || {};
+  const pasos = Array.isArray(definicion.pasos) ? definicion.pasos : [];
+  const registro = Array.isArray(ejecucion.pasos) ? [...ejecucion.pasos] : [];
+  const indice = registro.findIndex(p => p.estado === 'esperando');
+  if (indice < 0) throw new Error('No encontré el paso que espera aprobación.');
+
+  const pendiente = registro[indice];
+  const ctx = {
+    ahora: ahora(),
+    workspace_id: automatizacion.workspace_id,
+    automatizacion: { id: automatizacion.id, nombre: automatizacion.nombre, descripcion: automatizacion.descripcion },
+    disparador: pendiente.disparador || { tipo: 'reanudacion', detalle: null, entrada: null },
+    pasos: {}
+  };
+
+  registro.forEach((p, i) => {
+    if (i < indice) ctx.pasos[String(i + 1)] = { tipo: p.tipo, detalle: p.detalle, salida: p.salida ?? null, estado: p.estado };
+  });
+  registro[indice] = { ...pendiente, estado: 'ok', salida: 'Aprobado para continuar.', aprobado_en: ahora() };
+  ctx.pasos[String(indice + 1)] = { tipo: pendiente.tipo, detalle: pendiente.detalle, salida: 'Aprobado para continuar.', estado: 'ok' };
+
+  let estadoFinal = 'ok';
+  let error = null;
+  let cortada = false;
+
+  for (let i = indice + 1; i < pasos.length; i++) {
+    const paso = pasos[i] || {};
+    const base = { n: i + 1, tipo: paso.tipo || 'accion', detalle: paso.detalle || '', en: ahora() };
+    try {
+      let r;
+      switch (base.tipo) {
+        case 'aviso': r = await correrAviso(env, paso, ctx); break;
+        case 'ia': r = await correrIa(env, paso, ctx); break;
+        case 'accion': r = await correrAccion(env, paso, ctx); break;
+        case 'condicion': {
+          const { vale, leida } = evaluar(paso.detalle, ctx);
+          r = vale ? { estado: 'ok', salida: 'Se cumple: ' + leida } : { estado: 'corto', salida: 'No se cumple: ' + leida };
+          if (!vale) cortada = true;
+          break;
+        }
+        case 'aprobacion':
+          r = { estado: 'esperando', nota: resolver(paso.detalle, ctx) || 'Esperando que alguien apruebe.', disparador: ctx.disparador };
+          cortada = true;
+          estadoFinal = 'esperando_aprobacion';
+          break;
+        default: r = { estado: 'omitido', nota: `Tipo de paso desconocido: ${base.tipo}.` };
+      }
+      registro[i] = { ...base, ...r };
+      ctx.pasos[String(i + 1)] = { tipo: base.tipo, detalle: base.detalle, salida: r.salida ?? null, estado: r.estado };
+      if (r.estado === 'error') { estadoFinal = 'error'; error = r.salida || 'Falló el paso ' + (i + 1); cortada = true; }
+    } catch (e) {
+      const mensaje = e?.message || String(e);
+      registro[i] = { ...base, estado: 'error', salida: mensaje };
+      estadoFinal = 'error'; error = `Paso ${i + 1} (${base.tipo}): ${mensaje}`; cortada = true;
+    }
+    if (cortada) {
+      for (let j = i + 1; j < pasos.length; j++) {
+        const p = pasos[j] || {};
+        registro[j] = { n: j + 1, tipo: p.tipo || 'accion', detalle: p.detalle || '', en: ahora(), estado: 'omitido', nota: 'No se llegó a este paso.' };
+      }
+      break;
+    }
+  }
+
+  return db.actualizar(env, 'ejecuciones', `id=eq.${ejecucion.id}`, {
     estado: estadoFinal,
     error,
     terminada_en: estadoFinal === 'esperando_aprobacion' ? null : ahora(),

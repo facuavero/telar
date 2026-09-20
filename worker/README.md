@@ -20,10 +20,13 @@ worker/
 | Ruta | Quién entra | Qué hace |
 |---|---|---|
 | `POST /api/ejecutar` | usuario con sesión | corre la automatización y devuelve la fila de `ejecuciones` |
+| `POST /api/ejecuciones/:id/aprobar` | usuario con sesión | aprueba y continúa una corrida pausada |
 | `GET /api/disparador` | usuario con sesión | URL del webhook y próxima corrida programada |
 | `POST /api/webhook/:id/:firma` | cualquiera con la URL | dispara la automatización (tiene que estar `activa`) |
 | `POST /api/oauth/gmail/iniciar` | usuario con sesión | devuelve la URL de consentimiento de Google |
 | `GET /api/oauth/gmail/callback` | Google | guarda el permiso y vuelve a la app |
+| `POST /api/oauth/slack/iniciar` | usuario con sesión | devuelve la URL de autorización de Slack |
+| `GET /api/oauth/slack/callback` | Slack | guarda el bot token cifrado y vuelve a la app |
 | `GET /api/salud` | cualquiera | qué está configurado y qué falta |
 
 Autorización: el front manda el access token de Supabase y el worker lee la
@@ -45,6 +48,8 @@ Secrets (`npx wrangler secret put NOMBRE`):
 | `CLAVE_GEMINI` | paso de IA | Google AI Studio → API keys |
 | `GOOGLE_CLIENT_ID` | OAuth de Gmail | Google Cloud (abajo) |
 | `GOOGLE_CLIENT_SECRET` | OAuth de Gmail | Google Cloud (abajo) |
+| `SLACK_CLIENT_ID` | OAuth de Slack | Slack API → Basic Information |
+| `SLACK_CLIENT_SECRET` | OAuth de Slack | Slack API → Basic Information |
 
 Si cambiás `CLAVE_FIRMA` se caen las URLs de webhook que ya repartiste. Si
 cambiás `CLAVE_CIFRADO`, hay que volver a conectar Gmail.
@@ -59,7 +64,8 @@ cambiás `CLAVE_CIFRADO`, hay que volver a conectar Gmail.
    usuarios de prueba (hasta 100), y el refresh token se vence a los 7 días.
    Para que dure, hay que publicar la app.
 4. **Permisos (scopes)**: `openid`, `email` y
-   `https://www.googleapis.com/auth/gmail.send`. `gmail.send` es un scope
+   `https://www.googleapis.com/auth/gmail.send` y
+   `https://www.googleapis.com/auth/gmail.readonly`. Son scopes
    sensible: si publicás, Google pide verificación.
 5. **Credenciales → Crear credenciales → ID de cliente de OAuth → Aplicación web.**
    - URI de redireccionamiento autorizado: `https://telar.app/api/oauth/gmail/callback`
@@ -68,8 +74,8 @@ cambiás `CLAVE_CIFRADO`, hay que volver a conectar Gmail.
    - No hace falta cargar orígenes de JavaScript autorizados.
 6. Copiá el **Client ID** y el **Client secret** a los secrets de arriba.
 
-Si después querés disparadores por mail entrante, sumá el scope
-`https://www.googleapis.com/auth/gmail.readonly` y volvé a conectar la cuenta.
+Si Gmail estaba conectado antes de agregar el disparador por correo entrante,
+hay que reconectarlo una vez para aceptar `gmail.readonly`.
 
 ## Deploy
 
@@ -80,6 +86,9 @@ npx wrangler deploy
 El cron (`*/5 * * * *`) queda configurado en `wrangler.jsonc`: cada 5 minutos el
 worker se fija qué automatización `activa` con disparador programado le toca.
 Por eso una corrida puede salir hasta 5 minutos después de la hora pedida.
+En el mismo cron, Gmail consulta `history.list` desde el último cursor guardado
+en la conexión y dispara las automatizaciones de tipo `email` por cada correo
+nuevo en la bandeja de entrada.
 
 ## Los pasos, en criollo
 
@@ -89,11 +98,11 @@ Por eso una corrida puede salir hasta 5 minutos después de la hora pedida.
   Si no se cumple, corta ahí y el resto queda `omitido`.
 - **Pedirle algo a la IA** — la instrucción va tal cual a Gemini, con el
   contexto de la corrida.
-- **Acción** — por ahora solo Gmail:
-  `gmail a alguien@dominio.com | asunto | cuerpo`. El resto de las herramientas
-  queda `omitido` con el motivo, no simulado.
-- **Esperar aprobación** — corta la corrida en `esperando_aprobacion`. Falta la
-  pantalla para aprobar.
+- **Acción** — Gmail: `gmail a alguien@dominio.com | asunto | cuerpo`; o Slack:
+  `slack #canal | mensaje`. El resto de las herramientas queda `omitido` con el
+  motivo, no simulado.
+- **Esperar aprobación** — corta la corrida en `esperando_aprobacion`. Se aprueba
+  desde el detalle de la corrida en Actividad y continúa por el paso siguiente.
 
 En cualquier texto podés meter `{{disparador.entrada.loQueSea}}`,
 `{{pasos.N.salida}}`, `{{automatizacion.nombre}}` y `{{ahora}}`.

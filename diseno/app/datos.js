@@ -107,12 +107,20 @@
     D.api('/api/ejecutar', { metodo: 'POST', cuerpo: { automatizacion_id: automatizacion.id } })
       .then(r => r.ejecucion);
 
+  D.aprobar = (ejecucionId) =>
+    D.api('/api/ejecuciones/' + encodeURIComponent(ejecucionId) + '/aprobar', { metodo: 'POST' })
+      .then(r => r.ejecucion);
+
   // URL del webhook y próxima corrida programada.
   D.disparador = (id) =>
     D.api('/api/disparador?automatizacion_id=' + encodeURIComponent(id));
 
   D.conectarGmail = (ws) =>
     D.api('/api/oauth/gmail/iniciar', { metodo: 'POST', cuerpo: { workspace_id: ws, volver: location.pathname } })
+      .then(r => r.url);
+
+  D.conectarSlack = (ws) =>
+    D.api('/api/oauth/slack/iniciar', { metodo: 'POST', cuerpo: { workspace_id: ws, volver: location.pathname } })
       .then(r => r.url);
 
   D.salud = () => D.api('/api/salud');
