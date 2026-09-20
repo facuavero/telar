@@ -10,7 +10,11 @@
   }
 
   telar.signUp = (email, password) =>
-    telar.sb.auth.signUp({ email, password });
+    telar.sb.auth.signUp({
+      email,
+      password,
+      options: { emailRedirectTo: window.location.origin + "/cuenta.html" }
+    });
 
   telar.signIn = (email, password) =>
     telar.sb.auth.signInWithPassword({ email, password });
