@@ -217,11 +217,12 @@
     pintarPasos();
     ir('editor', est.editando.nombre);
     cargarDisparador(id);
-    datos.ejecucionesDe(id).then(list => {
+    try {
+      const list = await datos.ejecucionesDe(id);
       $('#e-ejec').innerHTML = list.length
         ? list.map(e => pintarCorrida(e)).join('')
         : `<div class="vacio chico">Todavía no corrió.</div>`;
-    }).catch(e => aviso(explicar(e)));
+    } catch (e) { aviso(explicar(e)); }
   }
 
   function leerEditor() {

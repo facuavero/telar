@@ -57,7 +57,7 @@
 
   .view{display:none;flex:1;overflow:auto;min-height:0}
   .view.on{display:block}
-  #v-editor.on{display:flex;flex-direction:column;overflow:hidden}
+  #v-editor.on{display:block;overflow:auto}
   .page{max-width:1080px;margin:0 auto;padding:36px 32px 72px}
   .page.narrow{max-width:940px}
   .ph{display:flex;align-items:flex-end;gap:16px;margin-bottom:24px}
@@ -451,3 +451,12 @@
   .ayuda-pasos{border-top:1px dashed var(--line);gap:5px;padding-top:12px}
   .ayuda-pasos small{font-size:12px;color:var(--muted)}
   .ayuda-pasos code{font:400 11.5px var(--font-mono);background:var(--bg-2);border-radius:5px;padding:2px 5px}
+
+  @media (max-width:700px){
+    .page{padding:24px 16px 56px}
+    .ph{align-items:flex-start;flex-direction:column}
+    .ph .act{width:100%;overflow-x:auto;padding-bottom:2px}
+    .paso{grid-template-columns:auto 1fr auto}
+    .paso select{grid-column:2}
+    .paso input{grid-column:2 / -1}
+  }
