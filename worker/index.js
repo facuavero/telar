@@ -49,7 +49,7 @@ async function rutear(req, env, url, ctx) {
     return json({
       ok: true,
       motor: 'listo',
-      ia: !!env.CLAVE_IA,
+      ia: !!env.CLAVE_GEMINI,
       gmail: !!(env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET && env.CLAVE_CIFRADO),
       base: !!env.SUPABASE_SERVICE_ROLE
     });

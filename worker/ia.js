@@ -1,9 +1,7 @@
-// Telar · paso de IA. Messages API de Anthropic por HTTP directo: el repo no
-// tiene build step ni dependencias, así que no entra el SDK.
+// Telar · paso de IA. API de Gemini por HTTP directo: el repo no tiene build
+// step ni dependencias, así que no entra el SDK.
 
-const MODELO = 'claude-opus-5';
-const VERSION = '2023-06-01';
-const BETA_FALLBACK = 'server-side-fallback-2026-07-01';
+const MODELO = 'gemini-3.5-flash-lite';
 
 const SISTEMA = [
   'Sos un paso dentro de una automatización de Telar.',
@@ -13,27 +11,24 @@ const SISTEMA = [
 ].join(' ');
 
 export async function pedirle(env, { instruccion, contexto }) {
-  if (!env.CLAVE_IA) {
-    throw new Error('Falta el secreto CLAVE_IA en el worker (clave de la API de Anthropic).');
+  if (!env.CLAVE_GEMINI) {
+    throw new Error('Falta el secreto CLAVE_GEMINI en el worker (clave de Google AI Studio).');
   }
 
+  const modelo = env.MODELO_IA || MODELO;
   const cuerpo = {
-    model: env.MODELO_IA || MODELO,
-    max_tokens: 16000,
-    system: SISTEMA,
-    messages: [{ role: 'user', content: mensaje(instruccion, contexto) }],
-    // Si un clasificador rechaza el pedido, el servidor reintenta solo con otro
-    // modelo en vez de devolver la corrida vacía.
-    fallbacks: 'default'
+    systemInstruction: { parts: [{ text: SISTEMA }] },
+    contents: [{ role: 'user', parts: [{ text: mensaje(instruccion, contexto) }] }],
+    generationConfig: { maxOutputTokens: 8192 }
   };
 
-  const r = await fetch((env.IA_BASE_URL || 'https://api.anthropic.com') + '/v1/messages', {
+  const base = env.IA_BASE_URL || 'https://generativelanguage.googleapis.com';
+  const url = `${base}/v1beta/models/${encodeURIComponent(modelo)}:generateContent`;
+  const r = await fetch(url, {
     method: 'POST',
     headers: {
       'content-type': 'application/json',
-      'x-api-key': env.CLAVE_IA,
-      'anthropic-version': VERSION,
-      'anthropic-beta': BETA_FALLBACK
+      'x-goog-api-key': env.CLAVE_GEMINI
     },
     body: JSON.stringify(cuerpo)
   });
@@ -41,25 +36,28 @@ export async function pedirle(env, { instruccion, contexto }) {
   const datos = await r.json().catch(() => null);
   if (!r.ok) {
     const detalle = datos?.error?.message || ('HTTP ' + r.status);
-    if (r.status === 401) throw new Error('La clave de la IA no sirve: ' + detalle);
-    if (r.status === 429) throw new Error('La IA está limitando el uso, probá de nuevo: ' + detalle);
-    if (r.status >= 500) throw new Error('La IA no está respondiendo: ' + detalle);
-    throw new Error('La IA rechazó el pedido: ' + detalle);
+    if (r.status === 400 || r.status === 401 || r.status === 403) throw new Error('La clave o configuración de Gemini no sirve: ' + detalle);
+    if (r.status === 429) throw new Error('Gemini alcanzó el límite gratuito, probá de nuevo más tarde: ' + detalle);
+    if (r.status >= 500) throw new Error('Gemini no está respondiendo: ' + detalle);
+    throw new Error('Gemini rechazó el pedido: ' + detalle);
   }
 
-  if (datos?.stop_reason === 'refusal') {
-    throw new Error('La IA se negó a responder este paso' +
-      (datos.stop_details?.explanation ? ': ' + datos.stop_details.explanation : '.'));
-  }
-
-  const texto = (datos?.content || [])
-    .filter(b => b.type === 'text')
-    .map(b => b.text)
+  const candidato = datos?.candidates?.[0];
+  const texto = (candidato?.content?.parts || [])
+    .map(parte => parte.text || '')
     .join('\n')
     .trim();
 
-  if (!texto) throw new Error('La IA respondió vacío.');
-  return { texto, tokens: datos?.usage?.output_tokens ?? null, modelo: datos?.model || cuerpo.model };
+  if (!texto) {
+    const motivo = candidato?.finishReason || datos?.promptFeedback?.blockReason;
+    throw new Error('Gemini respondió vacío' + (motivo ? ` (${motivo}).` : '.'));
+  }
+
+  return {
+    texto,
+    tokens: datos?.usageMetadata?.candidatesTokenCount ?? null,
+    modelo: datos?.modelVersion || modelo
+  };
 }
 
 function mensaje(instruccion, contexto) {

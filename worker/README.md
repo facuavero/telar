@@ -8,7 +8,7 @@ anon key de Supabase.
 worker/
   index.js       rutas + disparador programado
   motor.js       recorre los pasos y escribe la corrida
-  ia.js          Messages API de Anthropic
+  ia.js          API de Gemini
   gmail.js       OAuth de Google y envío de mails
   programado.js  "cada lunes 9:00" → ¿toca ahora?
   cripto.js      HMAC (webhook, state) y AES-GCM (refresh tokens)
@@ -42,7 +42,7 @@ Secrets (`npx wrangler secret put NOMBRE`):
 | `SUPABASE_SERVICE_ROLE` | escribir corridas y leer tokens | Supabase → Settings → API → `service_role` |
 | `CLAVE_FIRMA` | firmar la URL del webhook y el state del OAuth | inventala: `openssl rand -base64 32` |
 | `CLAVE_CIFRADO` | cifrar los refresh tokens (AES-GCM, 32 bytes) | `openssl rand -base64 32` |
-| `CLAVE_IA` | paso de IA | console.anthropic.com → API keys |
+| `CLAVE_GEMINI` | paso de IA | Google AI Studio → API keys |
 | `GOOGLE_CLIENT_ID` | OAuth de Gmail | Google Cloud (abajo) |
 | `GOOGLE_CLIENT_SECRET` | OAuth de Gmail | Google Cloud (abajo) |
 
@@ -87,7 +87,7 @@ Por eso una corrida puede salir hasta 5 minutos después de la hora pedida.
 - **Condición** — `{{pasos.1.salida}} contiene error`. Operadores: `contiene`,
   `no contiene`, `empieza con`, `termina con`, `==`, `!=`, `>`, `<`, `>=`, `<=`.
   Si no se cumple, corta ahí y el resto queda `omitido`.
-- **Pedirle algo a la IA** — la instrucción va tal cual a Claude, con el
+- **Pedirle algo a la IA** — la instrucción va tal cual a Gemini, con el
   contexto de la corrida.
 - **Acción** — por ahora solo Gmail:
   `gmail a alguien@dominio.com | asunto | cuerpo`. El resto de las herramientas
