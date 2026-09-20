@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Iniciar sesión · Telar</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="telar.css?v=2">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='6' fill='%231B1915'/%3E%3Cg fill='none' stroke-width='2.4' stroke-linecap='butt'%3E%3Cpath d='M5 8h14' stroke='%233447C4'/%3E%3Cpath d='M5 12h14' stroke='%23C4402A'/%3E%3Cpath d='M5 16h14' stroke='%23C98F12'/%3E%3Cpath d='M9 5v5.6M9 13.4v5.6' stroke='%23F5F2EB'/%3E%3Cpath d='M15 5v1.6M15 9.4v5.2M15 17.4v1.6' stroke='%23F5F2EB'/%3E%3C/g%3E%3C/svg%3E">
+<style>
+  body{min-height:100vh;display:flex;flex-direction:column}
+  .authwrap{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 16px}
+  .authcard{width:100%;max-width:380px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-xl);box-shadow:var(--shadow-2);padding:34px 30px}
+  .authcard .logo{justify-content:center;display:flex;margin-bottom:4px}
+  .authcard h1{font:400 28px/1.1 var(--font-serif);letter-spacing:-.015em;text-align:center;margin:14px 0 4px}
+  .authcard .sub{text-align:center;color:var(--muted);font-size:13.5px;margin:0 0 26px}
+  form{display:flex;flex-direction:column;gap:14px}
+  .field{display:flex;flex-direction:column;gap:6px}
+  .field label{font-size:12.5px;font-weight:500;color:var(--ink-2)}
+  .field input{height:40px;padding:0 12px;border-radius:9px;border:1px solid var(--line-2);background:var(--surface-2);font:inherit;font-size:14px;color:var(--ink);outline:0;transition:border-color .15s,box-shadow .15s}
+  .field input:focus{border-color:var(--anil);box-shadow:0 0 0 3px var(--anil-soft)}
+  .msg{display:none;font-size:13px;padding:10px 12px;border-radius:9px;line-height:1.4}
+  .msg.err{display:block;background:var(--err-soft);color:var(--err)}
+  .msg.ok{display:block;background:var(--ok-soft);color:var(--ok)}
+  .authcard .btn{margin-top:4px}
+  .switch{text-align:center;margin-top:22px;font-size:13.5px;color:var(--muted)}
+  .switch a{color:var(--ink);font-weight:500;text-decoration:none;border-bottom:1px solid var(--line-2)}
+  .switch a:hover{border-color:var(--ink)}
+  .back{margin-bottom:22px}
+  .warncfg{max-width:380px;margin:0 auto 18px;padding:12px 14px;border:1px dashed var(--line-2);border-radius:12px;font-size:12.5px;color:var(--muted);line-height:1.5}
+  .warncfg code{background:var(--bg-2);padding:1px 5px;border-radius:5px;font-family:var(--font-mono);font-size:11.5px}
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+<symbol id="i-mark" viewBox="0 0 24 24">
+  <rect width="24" height="24" rx="6" fill="#1B1915" stroke="none"/>
+  <g fill="none" stroke-width="2.4" stroke-linecap="butt">
+    <path d="M5 8h14" stroke="#3447C4"/><path d="M5 12h14" stroke="#C4402A"/><path d="M5 16h14" stroke="#C98F12"/>
+    <path d="M9 5v5.6M9 13.4V19" stroke="#F5F2EB"/>
+    <path d="M15 5v1.6M15 9.4v5.2M15 17.4V19" stroke="#F5F2EB"/>
+  </g>
+</symbol>
+</svg>
+
+<div class="authwrap">
+  <div class="warncfg" id="warncfg" style="display:none">
+    Falta configurar Supabase: editá <code>supabase-config.js</code> con la URL y la anon key de tu proyecto.
+  </div>
+  <div class="authcard">
+    <a class="logo" href="landing.html"><svg><use href="#i-mark"/></svg></a>
+    <h1>Bienvenido de vuelta</h1>
+    <p class="sub">Iniciá sesión para entrar a tu cuenta.</p>
+    <div class="msg" id="msg"></div>
+    <form id="form-login">
+      <div class="field">
+        <label for="email">Email</label>
+        <input id="email" type="email" autocomplete="email" required>
+      </div>
+      <div class="field">
+        <label for="password">Contraseña</label>
+        <input id="password" type="password" autocomplete="current-password" required>
+      </div>
+      <button class="btn btn-ink btn-full btn-lg" type="submit" id="btn-submit">Iniciar sesión</button>
+    </form>
+    <div class="switch">¿No tenés cuenta? <a href="registro.html">Creá una gratis</a></div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-config.js"></script>
+<script src="auth.js"></script>
+<script>
+  if (window.telar.sinConfigurar) document.getElementById('warncfg').style.display = 'block';
+  else telar.redirectIfSession('cuenta.html');
+
+  const msg = document.getElementById('msg');
+  function setMsg(text, tipo) {
+    msg.textContent = text;
+    msg.className = 'msg ' + (tipo || '');
+  }
+
+  document.getElementById('form-login').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    if (telar.sinConfigurar) return setMsg('Supabase no está configurado todavía.', 'err');
+    const email = document.getElementById('email').value.trim();
+    const password = document.getElementById('password').value;
+    const btn = document.getElementById('btn-submit');
+    btn.disabled = true; btn.textContent = 'Entrando…';
+    const { error } = await telar.signIn(email, password);
+    btn.disabled = false; btn.textContent = 'Iniciar sesión';
+    if (error) return setMsg(error.message === 'Invalid login credentials'
+      ? 'Email o contraseña incorrectos.' : error.message, 'err');
+    window.location.href = 'cuenta.html';
+  });
+</script>
+</body>
+</html>

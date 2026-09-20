@@ -467,8 +467,8 @@
           <button type="button" data-lang="pt">Português <span class="code">PT</span></button>
         </div>
       </div>
-      <a class="btn btn-ghost" href="#">Iniciar sesión</a>
-      <a class="btn btn-ink" href="#">Empezar gratis</a>
+      <a class="btn btn-ghost" href="login.html">Iniciar sesión</a>
+      <a class="btn btn-ink" href="registro.html">Empezar gratis</a>
     </div>
   </div>
 </nav>
@@ -480,7 +480,7 @@
     <h1 class="display">Tus herramientas,<em>tejidas en una sola.</em></h1>
     <p class="lead">Telar conecta Slack, Gmail, Google Docs, Sheets y Notion, y hace el trabajo repetitivo por vos. Lo pedís como se lo pedirías a un compañero: Telar arma la automatización, te la muestra y la activa cuando la aprobás.</p>
     <div class="ctas">
-      <a class="btn btn-ink btn-lg" href="#">Empezar gratis</a>
+      <a class="btn btn-ink btn-lg" href="registro.html">Empezar gratis</a>
       <a class="btn btn-outline btn-lg" href="#como">Ver cómo funciona</a>
     </div>
     <div class="fine">Gratis hasta 500 tareas por mes · Sin tarjeta · Conectás tu primera herramienta en 2 minutos</div>
@@ -781,7 +781,7 @@
 <section class="final">
   <div class="wrap">
     <h2>Empezá a <em>tejer.</em></h2>
-    <form class="final-form hilo" onsubmit="event.preventDefault()">
+    <form class="final-form hilo" onsubmit="event.preventDefault();location.href='registro.html'">
       <div class="hilo-in">
         <svg class="i" style="color:var(--carmin)"><use href="#i-spark"/></svg>
         <input type="text" placeholder="¿Qué querés automatizar primero?" aria-label="¿Qué querés automatizar primero?">
@@ -894,7 +894,7 @@
         <h4>${c.t}</h4><p>${c.d}</p>
         <span class="go">Usar esta receta ${arrow}</span>
       </a>`).join('') + `
-      <a class="case dark" href="#" style="animation-delay:180ms">        <h4>¿Tenés otro? Pedíselo a Telar.</h4>
+      <a class="case dark" href="registro.html" style="animation-delay:180ms">        <h4>¿Tenés otro? Pedíselo a Telar.</h4>
         <p>Si lo podés explicar en una oración, Telar lo puede armar.</p>
         <span class="go">Empezar gratis ${arrow}</span>
       </a>`;
