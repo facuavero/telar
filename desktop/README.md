@@ -27,3 +27,11 @@ npm run dist         # lo que corresponda al sistema actual
 
 Firmar la app (notarización en macOS, certificado en Windows) queda pendiente:
 sin eso, el instalador tira advertencia al abrirse.
+
+## OAuth desde el escritorio
+
+Conectar Gmail abre `accounts.google.com` en el navegador del sistema (Electron
+manda afuera todo lo que no sea del dominio de la app, y Google además bloquea
+el login dentro de webviews embebidas). El permiso queda guardado del lado del
+worker, así que cuando volvés a la ventana de Telar alcanza con el botón de
+refrescar para verla conectada.

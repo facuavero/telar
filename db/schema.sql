@@ -26,8 +26,9 @@ create table if not exists public.miembros (
   primary key (workspace_id, usuario_id)
 );
 
--- Herramientas conectadas (Slack, Gmail, Drive…). Los tokens NO van acá:
--- van en secretos del backend. Acá solo queda el estado visible.
+-- Herramientas conectadas (Slack, Gmail, Drive…). El refresh token se guarda
+-- en config->oauth cifrado con AES-GCM: la clave (CLAVE_CIFRADO) vive solo en
+-- el worker, así la fila no sirve de nada sin él. Nada en texto plano.
 create table if not exists public.conexiones (
   id uuid primary key default gen_random_uuid(),
   workspace_id uuid not null references public.workspaces(id) on delete cascade,

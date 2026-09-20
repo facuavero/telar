@@ -21,7 +21,9 @@
     ['aviso', 'Avisar']
   ];
 
-  const est = { session: null, perfil: null, ws: null, autom: [], conex: [], ejec: [], editando: null };
+  const NOMBRE_PASO = Object.fromEntries(TIPOS_PASO);
+
+  const est = { session: null, perfil: null, ws: null, autom: [], conex: [], ejec: [], editando: null, disparador: null };
 
   // ---------- utilidades ----------
 
@@ -41,6 +43,32 @@
   const fecha = iso => iso ? new Date(iso).toLocaleString('es-AR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }) : '—';
 
   const PINTA = { ok: 'ok', error: 'err', corriendo: 'warn', cancelada: '', esperando_aprobacion: 'warn' };
+  const PINTA_PASO = { ok: 'ok', error: 'err', corto: 'warn', esperando: 'warn', omitido: '' };
+
+  // Una corrida con el detalle de cada paso: es lo que devuelve el motor.
+  function pintarCorrida(e, { nombre } = {}) {
+    const pasos = e.pasos || [];
+    const resumen = e.error || (pasos.length + ' paso' + (pasos.length === 1 ? '' : 's'));
+    return `<div class="corrida">
+      <div class="fila" data-detalle="${e.id}">
+        <span class="punto ${PINTA[e.estado] || ''}"></span>
+        <div class="fila-txt"><b>${esc(nombre || fecha(e.empezada_en))}</b><small>${esc(resumen)}</small></div>
+        <span class="badge ${e.estado === 'ok' ? 'ok' : e.estado === 'error' ? 'err' : ''}">${e.estado}</span>
+        <small class="cuando">${fecha(e.empezada_en)}</small>
+      </div>
+      <ol class="pasos-corrida" id="d-${e.id}" hidden>${pasos.length
+        ? pasos.map(p => `<li>
+            <span class="punto ${PINTA_PASO[p.estado] || ''}"></span>
+            <div class="paso-txt">
+              <b>${esc(NOMBRE_PASO[p.tipo] || p.tipo)}</b>
+              <small>${esc(p.detalle || '')}</small>
+              ${p.salida || p.nota ? `<pre class="salida">${esc(p.salida || p.nota)}</pre>` : ''}
+            </div>
+            <span class="badge ${p.estado === 'ok' ? 'ok' : p.estado === 'error' ? 'err' : ''}">${p.estado}</span>
+          </li>`).join('')
+        : '<li class="vacio chico">La corrida no llegó a ningún paso.</li>'}</ol>
+    </div>`;
+  }
 
   // ---------- navegación ----------
 
@@ -103,7 +131,9 @@
       const c = est.conex.find(x => x.proveedor === app.id);
       return `<div class="app-card">
         <span class="app ${app.id}">${app.letra}</span>
-        <div><b>${esc(app.nombre)}</b><small>${c ? 'Conectada · ' + c.estado : 'Sin conectar'}</small></div>
+        <div><b>${esc(app.nombre)}</b><small>${c
+          ? (c.estado === 'activa' ? 'Conectada · ' + esc(c.cuenta || 'sin cuenta') : 'Conectada · ' + c.estado)
+          : (app.id === 'gmail' ? 'Sin conectar · con OAuth' : 'Sin conectar')}</small></div>
         ${c
           ? `<button class="btn btn-sm btn-ghost" data-desconectar="${c.id}">Quitar</button>`
           : `<button class="btn btn-sm btn-outline" data-conectar="${app.id}">Conectar</button>`}
@@ -113,13 +143,7 @@
 
   function pintarActividad() {
     $('#lista-ejec').innerHTML = est.ejec.length
-      ? est.ejec.map(e => `<div class="fila">
-          <span class="punto ${PINTA[e.estado] || ''}"></span>
-          <div class="fila-txt"><b>${esc(e.automatizaciones?.nombre || 'Automatización borrada')}</b>
-            <small>${esc(e.error || (e.pasos?.length || 0) + ' pasos')}</small></div>
-          <span class="badge ${e.estado === 'ok' ? 'ok' : e.estado === 'error' ? 'err' : ''}">${e.estado}</span>
-          <small class="cuando">${fecha(e.empezada_en)}</small>
-        </div>`).join('')
+      ? est.ejec.map(e => pintarCorrida(e, { nombre: e.automatizaciones?.nombre || 'Automatización borrada' })).join('')
       : `<div class="vacio">Sin ejecuciones todavía. Probá una automatización desde el editor.</div>`;
   }
 
@@ -138,6 +162,46 @@
       : `<div class="vacio chico">Sin pasos. Agregá el primero.</div>`;
   }
 
+  function pintarDisparador() {
+    const caja = $('#e-disp-info');
+    const tipo = $('#e-disp-tipo').value;
+    const d = est.disparador;
+    if (!d) { caja.innerHTML = ''; return; }
+
+    if (tipo === 'webhook') {
+      caja.innerHTML = `<div class="disp-dato"><b>URL del webhook</b>
+        <button class="btn btn-sm btn-ghost" id="e-copiar">Copiar</button>
+        <code id="e-webhook">${esc(d.webhook)}</code></div>
+        <small class="fine-mini">Pegala en la otra herramienta. Un POST a esa URL corre la automatización
+        (tiene que estar activa) y lo que mandes en el cuerpo queda en <code>{{disparador.entrada}}</code>.</small>`;
+      return;
+    }
+    if (tipo === 'cron') {
+      const p = d.programado;
+      caja.innerHTML = p
+        ? `<div class="disp-dato"><b>Se interpreta como</b> <code>${esc(p.texto)}</code></div>
+           <small class="fine-mini">Próxima corrida: ${p.cuando ? fecha(p.cuando) : 'nunca'}.
+           El worker revisa cada 5 minutos, así que puede salir un poco después.
+           Guardá para recalcular.</small>`
+        : `<small class="fine-mini">Guardá para ver cómo queda interpretado el horario.</small>`;
+      return;
+    }
+    if (tipo === 'email') {
+      caja.innerHTML = `<small class="fine-mini">El disparador por mail entrante todavía no está.
+        Gmail hoy sirve para mandar, no para escuchar.</small>`;
+      return;
+    }
+    caja.innerHTML = `<small class="fine-mini">La corrés vos con el botón “Probar”.</small>`;
+  }
+
+  function cargarDisparador(id) {
+    est.disparador = null;
+    pintarDisparador();
+    return datos.disparador(id)
+      .then(d => { est.disparador = d; pintarDisparador(); })
+      .catch(e => { $('#e-disp-info').innerHTML = `<small class="fine-mini">${esc(explicar(e))}</small>`; });
+  }
+
   async function abrirEditor(id) {
     est.editando = await datos.automatizacion(id);
     est.editando.definicion = est.editando.definicion || { disparador: null, pasos: [] };
@@ -150,10 +214,10 @@
     $('#e-estado').textContent = est.editando.estado === 'activa' ? 'Pausar' : 'Activar';
     pintarPasos();
     ir('editor', est.editando.nombre);
+    cargarDisparador(id);
     datos.ejecucionesDe(id).then(list => {
       $('#e-ejec').innerHTML = list.length
-        ? list.map(e => `<div class="mini-ejec"><span class="badge ${e.estado === 'ok' ? 'ok' : 'err'}">${e.estado}</span>
-            <small>${fecha(e.empezada_en)}</small><small>${esc(e.error || (e.pasos?.length || 0) + ' pasos')}</small></div>`).join('')
+        ? list.map(e => pintarCorrida(e)).join('')
         : `<div class="vacio chico">Todavía no corrió.</div>`;
     }).catch(e => aviso(explicar(e)));
   }
@@ -234,8 +298,14 @@
     await recargar();
 
     const ruta = location.hash.slice(1);
-    if (ruta.startsWith('editor/')) abrirEditor(ruta.split('/')[1]).catch(() => ir('inicio'));
-    else ir(['automatizaciones', 'integraciones', 'actividad'].includes(ruta) ? ruta : 'inicio');
+    const [vista, query] = ruta.split('?');
+    if (query) {
+      const gmail = new URLSearchParams(query).get('gmail');
+      if (gmail === 'ok') aviso('Gmail quedó conectado.');
+      else if (gmail) aviso('Google no completó la conexión: ' + gmail);
+    }
+    if (vista.startsWith('editor/')) abrirEditor(vista.split('/')[1]).catch(() => ir('inicio'));
+    else ir(['automatizaciones', 'integraciones', 'actividad'].includes(vista) ? vista : 'inicio');
   }
 
   // ---------- eventos ----------
@@ -274,8 +344,29 @@
     const conectar = t.closest('[data-conectar]');
     if (conectar) {
       const app = APPS.find(a => a.id === conectar.dataset.conectar);
+      if (app.id === 'gmail') {
+        conectar.textContent = 'Abriendo Google…';
+        try { location.href = await datos.conectarGmail(est.ws.id); }
+        catch (e) { conectar.textContent = 'Conectar'; aviso(explicar(e)); }
+        return;
+      }
       try { await datos.conectar(est.ws.id, app.id, app.nombre); await recargar(); }
       catch (e) { aviso(explicar(e)); }
+      return;
+    }
+
+    // Desplegar el detalle de una corrida.
+    const detalle = t.closest('[data-detalle]');
+    if (detalle) {
+      const caja = $('#d-' + detalle.dataset.detalle);
+      if (caja) caja.hidden = !caja.hidden;
+      return;
+    }
+
+    if (t.closest('#e-copiar')) {
+      const url = $('#e-webhook')?.textContent || '';
+      try { await navigator.clipboard.writeText(url); t.closest('#e-copiar').textContent = 'Copiada'; }
+      catch (_) { aviso('No pude copiar sola: ' + url); }
       return;
     }
 
@@ -301,7 +392,7 @@
     if (t.closest('#e-guardar')) {
       try {
         est.editando = await datos.guardarAutomatizacion(est.editando.id, leerEditor());
-        aviso(null); await recargar();
+        aviso(null); await recargar(); cargarDisparador(est.editando.id);
         t.closest('#e-guardar').textContent = 'Guardado';
         setTimeout(() => { const b = $('#e-guardar'); if (b) b.textContent = 'Guardar'; }, 1200);
       } catch (e) { aviso(explicar(e)); }
@@ -317,14 +408,27 @@
       return;
     }
     if (t.closest('#e-probar')) {
+      const boton = t.closest('#e-probar');
+      boton.disabled = true;
+      const antes = boton.innerHTML;
+      boton.textContent = 'Corriendo…';
       try {
         est.editando = await datos.guardarAutomatizacion(est.editando.id, leerEditor());
-        await datos.probar(est.ws.id, est.editando);
+        const corrida = await datos.ejecutar(est.editando);
+        aviso(corrida.estado === 'ok' ? null : (corrida.error || 'La corrida terminó en ' + corrida.estado + '.'));
         await recargar();
         await abrirEditor(est.editando.id);
+        const caja = $('#d-' + corrida.id);
+        if (caja) caja.hidden = false;
       } catch (e) { aviso(explicar(e)); }
+      boton.disabled = false;
+      boton.innerHTML = antes;
       return;
     }
+  });
+
+  document.addEventListener('change', (ev) => {
+    if (ev.target.id === 'e-disp-tipo') pintarDisparador();
   });
 
   document.addEventListener('keydown', (ev) => {

@@ -1,9 +1,24 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "telar",
+  "main": "worker/index.js",
   "compatibility_date": "2025-09-01",
   "assets": {
     "directory": "./diseno",
-    "not_found_handling": "404-page"
+    "binding": "ASSETS",
+    "not_found_handling": "404-page",
+    // El callback de OAuth es una navegación del navegador: sin esto lo agarra
+    // el manejador de 404 en vez del worker.
+    "run_worker_first": ["/api/*"]
+  },
+  // Revisa cada 5 minutos qué automatización programada le toca correr.
+  "triggers": {
+    "crons": ["*/5 * * * *"]
+  },
+  "vars": {
+    "SUPABASE_URL": "https://kwephwcmwzsuxlizvihp.supabase.co",
+    "SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt3ZXBod2Ntd3pzdXhsaXp2aWhwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk4NzQ5MzEsImV4cCI6MjEwNTQ1MDkzMX0.Z7b0O85wjtxEgW-spbFKP_7-1S-Lj5rGIftvb_RpEc8"
   }
+  // Secrets (wrangler secret put …): SUPABASE_SERVICE_ROLE, CLAVE_FIRMA,
+  // CLAVE_IA, CLAVE_CIFRADO, GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET.
 }

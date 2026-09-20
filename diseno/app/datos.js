@@ -82,25 +82,40 @@
     sb().from('ejecuciones').select('*').eq('automatizacion_id', automatizacionId)
       .order('empezada_en', { ascending: false }).limit(limite).then(chequear);
 
-  // Corrida de prueba: no toca ninguna herramienta, deja el rastro de los pasos
-  // para ver el flujo completo mientras el motor no existe.
-  D.probar = async (ws, automatizacion) => {
-    const pasos = (automatizacion.definicion?.pasos || []).map(p => ({
-      tipo: p.tipo,
-      detalle: p.detalle,
-      estado: 'simulado',
-      en: new Date().toISOString()
-    }));
-    const fila = chequear(await sb().from('ejecuciones').insert({
-      workspace_id: ws,
-      automatizacion_id: automatizacion.id,
-      estado: pasos.length ? 'ok' : 'error',
-      error: pasos.length ? null : 'La automatización no tiene pasos.',
-      terminada_en: new Date().toISOString(),
-      pasos
-    }).select().single());
-    return fila;
+  // ---- motor (worker de Cloudflare) ----
+  // El front nunca toca la service role key ni las claves de las integraciones:
+  // manda el token de la sesión y el worker hace el resto.
+
+  D.api = async (camino, { metodo = 'GET', cuerpo } = {}) => {
+    const { data } = await sb().auth.getSession();
+    const token = data?.session?.access_token;
+    const r = await fetch(camino, {
+      method: metodo,
+      headers: Object.assign({}, token ? { Authorization: 'Bearer ' + token } : {},
+        cuerpo ? { 'Content-Type': 'application/json' } : {}),
+      body: cuerpo ? JSON.stringify(cuerpo) : undefined
+    });
+    let datos = null;
+    try { datos = await r.json(); } catch (_) { /* respuesta vacía o HTML */ }
+    if (!r.ok) throw new Error(datos?.error || 'El motor respondió HTTP ' + r.status + '.');
+    if (!datos) throw new Error('El motor no está publicado en este dominio.');
+    return datos;
   };
+
+  // Corrida real: recorre los pasos y deja el resultado de cada uno.
+  D.ejecutar = (automatizacion) =>
+    D.api('/api/ejecutar', { metodo: 'POST', cuerpo: { automatizacion_id: automatizacion.id } })
+      .then(r => r.ejecucion);
+
+  // URL del webhook y próxima corrida programada.
+  D.disparador = (id) =>
+    D.api('/api/disparador?automatizacion_id=' + encodeURIComponent(id));
+
+  D.conectarGmail = (ws) =>
+    D.api('/api/oauth/gmail/iniciar', { metodo: 'POST', cuerpo: { workspace_id: ws, volver: location.pathname } })
+      .then(r => r.url);
+
+  D.salud = () => D.api('/api/salud');
 
   window.datos = D;
 })();

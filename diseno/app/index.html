@@ -158,6 +158,7 @@
               <option value="email">Email · llega un mail</option>
             </select>
             <input id="e-disp-conf" placeholder="Detalle (ej: cada lunes 9:00, o el filtro del mail)">
+            <div class="disp-info" id="e-disp-info"></div>
           </div>
         </div>
 
@@ -165,6 +166,12 @@
           <div class="bh"><span class="sic anil"><svg class="i"><use href="#i-layers"/></svg></span><h3>Pasos</h3>
             <button class="btn btn-sm btn-outline" id="e-add-paso"><svg class="i sm"><use href="#i-plus"/></svg>Agregar paso</button></div>
           <div class="bb" id="e-pasos"></div>
+          <div class="bb ayuda-pasos">
+            <small><b>Avisar:</b> el texto queda en la corrida. Si ponés una URL, le manda un POST.</small>
+            <small><b>Condición:</b> <code>{{pasos.1.salida}} contiene error</code>. Si no se cumple, corta ahí.</small>
+            <small><b>Acción:</b> por ahora solo Gmail: <code>gmail a alguien@dominio.com | asunto | cuerpo</code>.</small>
+            <small><b>IA:</b> escribí la instrucción. Podés usar <code>{{disparador.entrada}}</code> y <code>{{pasos.N.salida}}</code>.</small>
+          </div>
         </div>
 
         <div class="bloque">
@@ -179,8 +186,8 @@
       <div class="page">
         <div class="ph"><div><h1>Integraciones</h1><p>Las herramientas que Telar puede tocar.</p></div></div>
         <div class="nota"><svg class="i sm"><use href="#i-shield"/></svg>
-          El OAuth real de cada herramienta todavía no está conectado. Por ahora una conexión queda registrada
-          en tu workspace, sin tokens ni acceso a tus datos.</div>
+          Gmail se conecta con OAuth de verdad: el permiso queda cifrado del lado del worker, nunca en el navegador.
+          Las demás todavía no tienen OAuth: se registran en tu workspace, sin tokens ni acceso a tus datos.</div>
         <div class="grid-apps" id="lista-conex"></div>
       </div>
     </section>
