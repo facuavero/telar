@@ -1,0 +1,25 @@
+{
+  "name": "telar-desktop",
+  "version": "0.1.0",
+  "description": "Telar para escritorio",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "dev": "TELAR_URL=http://localhost:5173/app/ electron .",
+    "dist": "electron-builder",
+    "dist:win": "electron-builder --win",
+    "dist:mac": "electron-builder --mac"
+  },
+  "devDependencies": {
+    "electron": "^33.2.0",
+    "electron-builder": "^25.1.8"
+  },
+  "build": {
+    "appId": "app.telar.desktop",
+    "productName": "Telar",
+    "files": ["main.js", "precarga.js", "cargando.html", "package.json"],
+    "mac": { "category": "public.app-category.productivity", "target": ["dmg", "zip"] },
+    "win": { "target": ["nsis"] },
+    "linux": { "target": ["AppImage"], "category": "Utility" }
+  }
+}

@@ -3,9 +3,13 @@
   const cfg = window.TELAR_SUPABASE || {};
   const sinConfigurar = !cfg.url || cfg.url.includes("TU-PROYECTO");
 
-  const telar = { sinConfigurar };
+  // Si la librería no cargó (red caída, bloqueador), no reventamos: las páginas
+  // que la necesitan lo detectan con telar.sinLibreria y avisan.
+  const sinLibreria = !window.supabase || typeof window.supabase.createClient !== 'function';
 
-  if (!sinConfigurar) {
+  const telar = { sinConfigurar: sinConfigurar || sinLibreria, sinLibreria };
+
+  if (!sinConfigurar && !sinLibreria) {
     telar.sb = window.supabase.createClient(cfg.url, cfg.anonKey);
   }
 

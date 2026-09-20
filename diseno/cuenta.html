@@ -43,7 +43,10 @@
 <nav class="topbar">
   <div class="wrap">
     <a class="logo" href="landing.html"><svg><use href="#i-mark"/></svg>Telar</a>
-    <button class="btn btn-ghost" id="btn-logout">Cerrar sesión</button>
+    <div style="display:flex;gap:8px;align-items:center">
+      <a class="btn btn-ink" href="app/">Abrir la app</a>
+      <button class="btn btn-ghost" id="btn-logout">Cerrar sesión</button>
+    </div>
   </div>
 </nav>
 
@@ -52,13 +55,14 @@
   <p class="who" id="who"></p>
   <div class="card">
     <svg class="i"><use href="#p-spark"/></svg>
-    <h2>Todavía no hay nada tejido acá</h2>
-    <p>Tu cuenta ya existe. Lo que sigue es conectar tu primera herramienta y armar una automatización — eso todavía no está construido.</p>
+    <h2>Tu cuenta está lista</h2>
+    <p>Entrá a la app para armar tu primera automatización y conectar tus herramientas. El motor que las ejecuta todavía está en construcción: por ahora podés diseñarlas y correr pruebas.</p>
+    <p style="margin-top:16px"><a class="btn btn-ink" href="app/">Abrir la app</a></p>
   </div>
 </main>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="vendor/supabase.js"></script>
 <script src="supabase-config.js"></script>
 <script src="auth.js"></script>
 <script>

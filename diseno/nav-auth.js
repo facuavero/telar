@@ -35,6 +35,7 @@
       </button>
       <div class="avatar-menu" role="menu">
         <div class="avatar-mail"></div>
+        <a href="app/" role="menuitem">Abrir la app</a>
         <a href="cuenta.html" role="menuitem">Tu cuenta</a>
         <button type="button" role="menuitem" class="avatar-out">Cerrar sesión</button>
       </div>`;
